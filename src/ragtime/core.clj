@@ -24,7 +24,7 @@
                  {}
                  clauses)]
     `(reify Migration
-       (id [_] ~(name id))
+       (id [_] (name ~id))
        (up [_] ~@(:up methods))
        (down [_] ~@(:down methods)))))
 
