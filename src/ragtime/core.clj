@@ -1,4 +1,5 @@
 (ns ragtime.core
+  "Functions and macros for defining and applying migrations."
   (:use [clojure.core.incubator :only (-?>)]
         [clojure.tools.macro :only (name-with-attributes)]))
 
@@ -10,7 +11,7 @@
   (down [migration] "Rollback the migration"))
 
 (defmacro migration
-  "Create a new migration with the supplied id and clauses. The id must be
+  "Creates a new migration with the supplied id and clauses. The id must be
   unique. The clauses consist of an :up form, which is evaluated when the
   migration is applied, and a :down form, which is evalidated when the migration
   is rolled back.
@@ -31,7 +32,7 @@
 (defonce defined-migrations (atom {}))
 
 (defmacro defmigration
-  "Define a migration in the current namespace. See ragtime.core/migration.
+  "Defines a migration in the current namespace. See ragtime.core/migration.
 
   (defmigration a-migration
     (:up (apply-migration))
@@ -44,20 +45,25 @@
        (swap! ~'db-migrations conj ~name)
        (swap! defined-migrations assoc id# ~name))))
 
+(defn- namespace-name [ns]
+  (if (instance? clojure.lang.Namespace ns)
+    (name (ns-name ns))
+    (name ns)))
+
 (defn- migrations-ref [namespace]
-  (-?> (str namespace)
+  (-?> (namespace-name namespace)
        (symbol "db-migrations")
        (find-var)
        (var-get)))
 
 (defn list-migrations
-  "List the migrations in a namespace in the order in which they were defined."
+  "Lists the migrations in a namespace in the order in which they were defined."
   [namespace]
   (-?> (migrations-ref namespace)
        (deref)))
 
-(defn clear-migrations!
-  "Clear all migrations from an existing namespace."
+(defn reset-migrations!
+  "Clears the migrations from an existing namespace."
   [namespace]
   (-?> (migrations-ref namespace)
        (reset! [])))
