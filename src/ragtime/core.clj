@@ -1,7 +1,8 @@
 (ns ragtime.core
   "Functions and macros for defining and applying migrations."
   (:use [clojure.core.incubator :only (-?>)]
-        [clojure.tools.macro :only (name-with-attributes)]))
+        [clojure.tools.macro :only (name-with-attributes)]
+        ragtime.database))
 
 (defprotocol Migration
   "The migration protocol is meant to be reified into a single migration
@@ -31,6 +32,9 @@
 
 (defonce defined-migrations (atom {}))
 
+(defn remember-migration [migration]
+  (swap! defined-migrations assoc (id migration) migration))
+
 (defmacro defmigration
   "Defines a migration in the current namespace. See ragtime.core/migration.
 
@@ -43,7 +47,7 @@
        (def ~name (migration id# ~@args))
        (defonce ~'db-migrations (atom []))
        (swap! ~'db-migrations conj ~name)
-       (swap! defined-migrations assoc id# ~name))))
+       (remember-migration ~name))))
 
 (defn- namespace-name [ns]
   (if (instance? clojure.lang.Namespace ns)
@@ -67,3 +71,22 @@
   [namespace]
   (-?> (migrations-ref namespace)
        (reset! [])))
+
+(defn applied-migrations
+  "List all migrations applied to the database."
+  [db]
+  (->> (applied-migration-ids db)
+       (map @defined-migrations)))
+
+(defn migrate
+  "Apply a migration to a database."
+  [db migration]
+  (remember-migration migration)
+  (up migration)
+  (add-migration-id db (id migration)))
+
+(defn rollback
+  "Rollback a migration already applied to the database."
+  [db migration]
+  (down migration)
+  (remove-migration-id db (id migration)))
