@@ -1,4 +1,4 @@
-(ns ragtime.strategy.conflict
+(ns ragtime.strategy
   "Algorithms for managing conflicts between migrations applied to a database,
   and migrations that we want to apply to the database.")
 
