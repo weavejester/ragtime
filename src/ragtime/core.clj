@@ -2,7 +2,8 @@
   "Functions and macros for defining and applying migrations."
   (:use [clojure.core.incubator :only (-?>)]
         [clojure.tools.macro :only (name-with-attributes)]
-        ragtime.database))
+        ragtime.database)
+  (:require [ragtime.strategy :as strategy]))
 
 (defprotocol Migration
   "The migration protocol is meant to be reified into a single migration
@@ -79,7 +80,7 @@
        (map @defined-migrations)))
 
 (defn migrate
-  "Apply a migration to a database."
+  "Apply a single migration to a database."
   [db migration]
   (remember-migration migration)
   (up migration)
@@ -90,3 +91,17 @@
   [db migration]
   (down migration)
   (remove-migration-id db (id migration)))
+
+(defn migrate-all
+  "Migrate all migrations using the supplied strategy. The strategy defines
+  what to do if there are conflicts between the migrations applied to the
+  database, and the migrations that need to be applied. The default
+  strategy is ragtime.strategy/raise-error."
+  ([db migrations]
+     (migrate-all db migrations strategy/raise-error))
+  ([db migrations strategy]
+     (let [applied  (applied-migrations db)]
+       (for [[action migration] (strategy applied migrations)]
+         (case action
+           :migrate  (migrate db migration)
+           :rollback (rollback db migration))))))
