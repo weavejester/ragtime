@@ -1,7 +1,8 @@
 (ns ragtime.test.core
   (:use clojure.test
         ragtime.core
-        ragtime.database))
+        ragtime.database)
+  (:require [ragtime.strategy :as strategy]))
 
 (deftest test-migration
   (testing "migration id"
@@ -56,3 +57,20 @@
       (rollback db m)
       (is (= @a {}))
       (is (not (contains? (set (applied-migrations db)) m))))))
+
+(deftest test-migrate-all
+  (let [store   (atom {})
+        db      (in-memory-db)
+        assoc-x (migration "assoc-x"
+                  (:up (swap! store assoc :x 1))
+                  (:down (swap! store dissoc :x)))
+        assoc-y (migration "assoc-y"
+                  (:up (swap! store assoc :y 2))
+                  (:down (swap! store dissoc :y)))
+        assoc-z (migration "assoc-z"
+                  (:up (swap! store assoc :z 3))
+                  (:down (swap! store dissoc :z)))]
+    (migrate-all db [assoc-x assoc-y])
+    (is (= @store {:x 1 :y 2}))
+    (migrate-all db [assoc-x assoc-z] strategy/rebase)
+    (is (= @store {:x 1 :z 3}))))
