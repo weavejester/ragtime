@@ -101,7 +101,7 @@
      (migrate-all db migrations strategy/raise-error))
   ([db migrations strategy]
      (let [applied  (applied-migrations db)]
-       (for [[action migration] (strategy applied migrations)]
+       (doseq [[action migration] (strategy applied migrations)]
          (case action
            :migrate  (migrate db migration)
            :rollback (rollback db migration))))))
