@@ -68,7 +68,9 @@
        (deref)))
 
 (defn reset-migrations!
-  "Clears the migrations from an existing namespace."
+  "Clears the migrations from an existing namespace. This should be evaluated
+  at the beginning of any namespace holding migrations, so that reloads don't
+  contain old migrations."
   [namespace]
   (-?> (migrations-ref namespace)
        (reset! [])))
@@ -105,3 +107,11 @@
          (case action
            :migrate  (migrate db migration)
            :rollback (rollback db migration))))))
+
+(defn migrate-ns
+  "Migrate all migrations in a namespace using the supplied strategy. Works
+  like migrate-all."
+  ([db namespace]
+     (migrate-all db (list-migrations namespace)))
+  ([db namespace strategy]
+     (migrate-all db (list-migrations namespace) strategy)))
