@@ -47,5 +47,5 @@
   [applied migrations]
   (let [[conflicts unapplied] (split-at-conflict applied migrations)]
     (concat
-     (for [c conflicts] [:rollback c])
+     (for [c (reverse conflicts)] [:rollback c])
      (for [m unapplied] [:migrate m]))))
