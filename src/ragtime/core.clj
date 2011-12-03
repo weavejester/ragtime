@@ -1,14 +1,23 @@
 (ns ragtime.core
   "Functions and macros for defining and applying migrations."
-  (:use [clojure.core.incubator :only (-?>)]
-        [clojure.tools.macro :only (name-with-attributes)]
-        ragtime.database)
+  (:use ragtime.database)
   (:require [ragtime.strategy :as strategy]))
 
 (defonce defined-migrations (atom {}))
 
-(defn remember-migration [migration]
+(defn remember-migration
+  "Remember a migration so that it can be found from its ID. Automatically
+  called by the defmigration macro and migrate function."
+  [migration]
   (swap! defined-migrations assoc (:id migration) migration))
+
+(defonce current-order (atom 0))
+
+(defn next-order
+  "Return an integer representing the order in which a migration was defined.
+  Each successive call to this function will increment the order by 1."
+  []
+  (swap! current-order inc))
 
 (defmacro defmigration
   "Defines a migration in the current namespace. The name of the migration must
@@ -20,35 +29,28 @@
      :down #(rollback-migration db)})"
   [name & [migration]]
   `(let [id# (str (ns-name *ns*) "/" ~(str name))]
-     (def ~name (assoc ~migration :id id#))
-     (defonce ~'db-migrations (atom []))
-     (swap! ~'db-migrations conj ~name)
+     (def ~(with-meta name {:migration true})
+       (assoc ~migration :id id# :order (next-order)))
      (remember-migration ~name)))
 
-(defn- namespace-name [ns]
+(defn- get-namespace [ns]
   (if (instance? clojure.lang.Namespace ns)
-    (name (ns-name ns))
-    (name ns)))
-
-(defn- migrations-ref [namespace]
-  (-?> (namespace-name namespace)
-       (symbol "db-migrations")
-       (find-var)
-       (var-get)))
+    ns
+    (find-ns (symbol ns))))
 
 (defn list-migrations
-  "Lists the migrations in a namespace in the order in which they were defined."
-  [namespace]
-  (-?> (migrations-ref namespace)
-       (deref)))
-
-(defn reset-migrations!
-  "Clears the migrations from an existing namespace. This should be evaluated
-  at the beginning of any namespace holding migrations, so that reloads don't
-  contain old migrations."
-  [namespace]
-  (-?> (migrations-ref namespace)
-       (reset! [])))
+  "Lists the migrations in a namespace in the order in which they were defined.
+  The namespace may be a symbol or a namespace object. If no argument is
+  specified, the current namespace (*ns*) is used."
+  ([]
+     (list-migrations *ns*))
+  ([namespace]
+     (->> (get-namespace namespace)
+          (ns-publics)
+          (vals)
+          (filter (comp :migration meta))
+          (map var-get)
+          (sort-by :order))))
 
 (defn applied-migrations
   "List all migrations applied to the database."
