@@ -10,7 +10,7 @@ database schema.
 Add ragtime.core as a dependency if you want the database-independent
 core:
 
-    [ragtime/ragtime.core "0.1.0"]
+    [ragtime/ragtime.core "0.1.1"]
 
 The ragtime.sql library is currently not finished.
 
