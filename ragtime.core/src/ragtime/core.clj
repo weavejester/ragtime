@@ -1,7 +1,15 @@
 (ns ragtime.core
   "Functions and macros for defining and applying migrations."
-  (:use ragtime.database)
   (:require [ragtime.strategy :as strategy]))
+
+(defprotocol Migratable
+  "Protocol for a database that cab be migrated."
+  (add-migration-id [db migration-id]
+    "Add an applied migration ID to the database.")
+  (remove-migration-id [db migration-id]
+    "Remove a rolled-back migration ID from the database.")
+  (applied-migration-ids [db]
+    "Return a list of the ids of all migrations applied to the database."))
 
 (defonce defined-migrations (atom {}))
 

@@ -1,7 +1,6 @@
 (ns ragtime.test.core
   (:use clojure.test
-        ragtime.core
-        ragtime.database)
+        ragtime.core)
   (:require [ragtime.strategy :as strategy]))
 
 (defmigration test-migrate-1)
@@ -23,7 +22,7 @@
     (is (:down test-migrate-2))))
 
 (defrecord InMemoryDB [data]
-  Database
+  Migratable
   (add-migration-id [_ id]
     (swap! data update-in [:migrations] conj id))
   (remove-migration-id [_ id]
