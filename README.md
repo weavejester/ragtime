@@ -16,30 +16,33 @@ The ragtime.sql library is currently not finished.
 
 ## Usage
 
-Migrations consist of a map of two zero-argument functions, `:up` and
+### Creating migrations
+
+Migrations consist of a map of two one-argument functions, `:up` and
 `:down`, and a unique identifier, `:id`.
 
 Here's an example of one that modifies an in-memory atom:
 
     {:id "add-dog"
-     :up   #(swap! my-pets conj :dog)
-     :down #(swap! my-pets disj :dog)}
+     :up   (fn [db] (swap! db conj :dog))
+     :down (fn [db] (swap! db disj :dog))}
 
 The `defmigration` macro is usually used to define migrations. It will
 automatically add the `:id` key for you, based on the var name:
 
     (defmigration add-dog
-      {:up   #(swap! my-pets conj :dog)
-       :down #(swap! my-pets disj :dog)})
+      {:up   (fn [db] (swap! db conj :dog))
+       :down (fn [db] (swap! db disj :dog))})
 
-This also allows you to factor out common code:
+Because we're dealing with maps and functions, we can create factor
+out common functionality into higher-level functions:
 
-    (defn conj-to-atom [a x]
-      {:up   #(swap! a conj x)
-       :down #(swap! a disj x)}
+    (defn mconj [x]
+      {:up   (fn [db] (swap! db conj x))
+       :down (fn [db] (swap! db disj x))})
 
     (defmigration add-dog
-      (conj-to-atom my-pets :dog))
+      (mconj :dog))
 
 You can list the migrations in a namespace with `list-migrations`:
 

@@ -7,8 +7,8 @@
 (defmigration test-migrate-1)
 
 (defmigration test-migrate-2
-  {:up   #(println "up")
-   :down #(println "down")})
+  {:up   (fn [_] (println "up"))
+   :down (fn [_] (println "down"))})
 
 (deftest test-defmigration
   (testing "id based on symbol"
@@ -22,46 +22,47 @@
     (is (:up test-migrate-2))
     (is (:down test-migrate-2))))
 
-(deftype InMemoryDB [migrations]
+(defrecord InMemoryDB [data]
   Database
   (add-migration-id [_ id]
-    (swap! migrations conj id))
+    (swap! data update-in [:migrations] conj id))
   (remove-migration-id [_ id]
-    (swap! migrations disj id))
+    (swap! data update-in [:migrations] disj id))
   (applied-migration-ids [_]
-    (seq @migrations)))
+    (seq (:migrations @data))))
 
 (defn in-memory-db []
-  (InMemoryDB. (atom #{})))
+  (InMemoryDB. (atom {:migrations #{}})))
 
 (deftest test-migrate-and-rollback
-  (let [a  (atom {})
-        db (in-memory-db)
-        m  {:id "m"
-            :up #(swap! a assoc :x 1)
-            :down #(swap! a dissoc :x)}]
+  (let [database (in-memory-db)
+        migration {:id "m"
+                   :up   (fn [db] (swap! (:data db) assoc :x 1))
+                   :down (fn [db] (swap! (:data db) dissoc :x))}]
     (testing "migrate"
-      (migrate db m)
-      (is (= @a {:x 1}))
-      (is (contains? (set (applied-migrations db)) m)))
+      (migrate database migration)
+      (is (= (:x @(:data database)) 1))
+      (is (contains? (set (applied-migrations database)) migration)))
     (testing "rollback"
-      (rollback db m)
-      (is (= @a {}))
-      (is (not (contains? (set (applied-migrations db)) m))))))
+      (rollback database migration)
+      (is (nil? (:x @(:data database))))
+      (is (not (contains? (set (applied-migrations database)) migration))))))
 
 (deftest test-migrate-all
-  (let [store   (atom {})
-        db      (in-memory-db)
+  (let [database (in-memory-db)
         assoc-x {:id "assoc-x"
-                 :up #(swap! store assoc :x 1)
-                 :down #(swap! store dissoc :x)}
+                 :up   (fn [db] (swap! (:data db) assoc :x 1))
+                 :down (fn [db] (swap! (:data db) dissoc :x))}
         assoc-y {:id "assoc-y"
-                 :up #(swap! store assoc :y 2)
-                 :down #(swap! store dissoc :y)}
+                 :up   (fn [db] (swap! (:data db) assoc :y 2))
+                 :down (fn [db] (swap! (:data db) dissoc :y))}
         assoc-z {:id "assoc-z"
-                 :up #(swap! store assoc :z 3)
-                 :down #(swap! store dissoc :z)}]
-    (migrate-all db [assoc-x assoc-y])
-    (is (= @store {:x 1 :y 2}))
-    (migrate-all db [assoc-x assoc-z] strategy/rebase)
-    (is (= @store {:x 1 :z 3}))))
+                 :up   (fn [db] (swap! (:data db) assoc :z 3))
+                 :down (fn [db] (swap! (:data db) dissoc :z))}]
+    (migrate-all database [assoc-x assoc-y])
+    (is (= (:x @(:data database)) 1))
+    (is (= (:y @(:data database)) 2))
+    (migrate-all database [assoc-x assoc-z] strategy/rebase)
+    (is (= (:x @(:data database)) 1))
+    (is (nil? (:y @(:data database))))
+    (is (= (:z @(:data database)) 3))))

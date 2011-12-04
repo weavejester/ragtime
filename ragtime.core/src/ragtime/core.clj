@@ -62,13 +62,13 @@
   "Apply a single migration to a database."
   [db migration]
   (remember-migration migration)
-  ((:up migration))
+  ((:up migration) db)
   (add-migration-id db (:id migration)))
 
 (defn rollback
   "Rollback a migration already applied to the database."
   [db migration]
-  ((:down migration))
+  ((:down migration) db)
   (remove-migration-id db (:id migration)))
 
 (defn migrate-all
