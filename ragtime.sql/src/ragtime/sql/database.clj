@@ -1,23 +1,36 @@
 (ns ragtime.sql.database
   (:use [ragtime.core :only (Migratable)])
-  (:require [clojureql.core :as sql]))
+  (:require [clojure.java.jdbc :as sql]
+            [clojure.java.io :as io])
+  (:import (java.util Date)))
 
-(defn- create-migration-table [db])
+(def ^:private migrations-table "ragtime_migrations")
 
-(defn- migration-table-exists? [db] false)
+(defn ^:internal ensure-migrations-table-exists [db]
+  ;; TODO: is there a portable way to detect table existence?
+  (sql/with-connection db
+    (try
+      (sql/create-table migrations-table
+                        [:id "varchar(255)"]
+                        [:created_at "datetime"])
+      (catch Exception _))))
 
-(defrecord SqlDatabase []
+(defrecord SqlDatabase [classname subprotocol subname user password]
   Migratable
   (add-migration-id [db id]
-    (if (migration-table-exists? db)
-      (create-migration-table db))
-    (sql/conj! (sql/table db migrations-table) {:id id}))
+    (sql/with-connection db
+      (ensure-migrations-table-exists db)
+      (sql/insert-values migrations-table
+                         [:id :created_at] [(str id) (Date.)])))
   
   (remove-migration-id [db id]
-    (if (migration-table-exists? db)
-      (sql/disj! (sql/table db migrations-table)
-                 (where (= :id id)))))
+    (sql/with-connection db
+      (ensure-migrations-table-exists db)
+      (sql/delete-rows migrations-table ["id = ?" id])))
 
   (applied-migration-ids [db]
-    (if (migration-table-exists? db)
-      @(sql/table db migrations-table))))
+    (sql/with-connection db
+      (ensure-migrations-table-exists db)
+      (sql/with-query-results results
+        ["SELECT id FROM ragtime_migrations ORDER BY created_at"]
+        (vec (map :id results))))))
