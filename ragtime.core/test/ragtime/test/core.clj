@@ -15,11 +15,14 @@
 (defn in-memory-db []
   (InMemoryDB. (atom {:migrations #{}})))
 
+(defn- assoc-migration [id key val]
+  {:id id
+   :up   (fn [db] (swap! (:data db) assoc key val))
+   :down (fn [db] (swap! (:data db) dissoc key))})
+
 (deftest test-migrate-and-rollback
-  (let [database (in-memory-db)
-        migration {:id "m"
-                   :up   (fn [db] (swap! (:data db) assoc :x 1))
-                   :down (fn [db] (swap! (:data db) dissoc :x))}]
+  (let [database  (in-memory-db)
+        migration (assoc-migration "m" :x 1)]
     (testing "migrate"
       (migrate database migration)
       (is (= (:x @(:data database)) 1))
@@ -31,15 +34,9 @@
 
 (deftest test-migrate-all
   (let [database (in-memory-db)
-        assoc-x {:id "assoc-x"
-                 :up   (fn [db] (swap! (:data db) assoc :x 1))
-                 :down (fn [db] (swap! (:data db) dissoc :x))}
-        assoc-y {:id "assoc-y"
-                 :up   (fn [db] (swap! (:data db) assoc :y 2))
-                 :down (fn [db] (swap! (:data db) dissoc :y))}
-        assoc-z {:id "assoc-z"
-                 :up   (fn [db] (swap! (:data db) assoc :z 3))
-                 :down (fn [db] (swap! (:data db) dissoc :z))}]
+        assoc-x  (assoc-migration "assoc-x" :x 1)
+        assoc-y  (assoc-migration "assoc-y" :y 2)
+        assoc-z  (assoc-migration "assoc-z" :z 3)]
     (migrate-all database [assoc-x assoc-y])
     (is (= (:x @(:data database)) 1))
     (is (= (:y @(:data database)) 2))
@@ -47,3 +44,17 @@
     (is (= (:x @(:data database)) 1))
     (is (nil? (:y @(:data database))))
     (is (= (:z @(:data database)) 3))))
+
+(deftest test-rollback-last
+  (let [database (in-memory-db)
+        assoc-x  (assoc-migration "assoc-x" :x 1)
+        assoc-y  (assoc-migration "assoc-y" :y 2)
+        assoc-z  (assoc-migration "assoc-z" :z 3)]
+    (migrate-all database [assoc-x assoc-y assoc-z])
+    (rollback-last database)
+    (is (= (:x @(:data database)) 1))
+    (is (= (:y @(:data database)) 2))
+    (is (not (contains? @(:data database) :z)))
+    (rollback-last database 2)
+    (is (not (contains? @(:data database) :y)))
+    (is (not (contains? @(:data database) :z)))))

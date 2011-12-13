@@ -51,3 +51,12 @@
          (case action
            :migrate  (migrate db migration)
            :rollback (rollback db migration))))))
+
+(defn rollback-last
+  "Rollback the last n previous migrations from the database. If n is not
+  specified, only the very last migration is rolled back."
+  ([db]
+     (rollback-last db 1))
+  ([db n]
+     (doseq [migration (take n (reverse (applied-migrations db)))]
+       (rollback db migration))))
