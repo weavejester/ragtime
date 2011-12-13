@@ -14,8 +14,7 @@
 (defonce defined-migrations (atom {}))
 
 (defn remember-migration
-  "Remember a migration so that it can be found from its ID. Automatically
-  called by the defmigration macro and migrate function."
+  "Remember a migration so that it can be found from its ID."
   [migration]
   (swap! defined-migrations assoc (:id migration) migration))
 
