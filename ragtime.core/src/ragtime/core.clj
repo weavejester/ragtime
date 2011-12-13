@@ -19,47 +19,6 @@
   [migration]
   (swap! defined-migrations assoc (:id migration) migration))
 
-(defonce current-order (atom 0))
-
-(defn next-order
-  "Return an integer representing the order in which a migration was defined.
-  Each successive call to this function will increment the order by 1."
-  []
-  (swap! current-order inc))
-
-(defmacro defmigration
-  "Defines a migration in the current namespace. The name of the migration must
-  be unique. The migration itself is a map consisting of a :up function for
-  applying the migration, and a :down function to rollback the migration.
-
-  (defmigration some-migration
-    {:up   #(apply-migration db)
-     :down #(rollback-migration db)})"
-  [name & [migration]]
-  `(let [id# (str (ns-name *ns*) "/" ~(str name))]
-     (def ~(with-meta name {:migration true})
-       (assoc ~migration :id id# :order (next-order)))
-     (remember-migration ~name)))
-
-(defn- get-namespace [ns]
-  (if (instance? clojure.lang.Namespace ns)
-    ns
-    (find-ns (symbol ns))))
-
-(defn list-migrations
-  "Lists the migrations in a namespace in the order in which they were defined.
-  The namespace may be a symbol or a namespace object. If no argument is
-  specified, the current namespace (*ns*) is used."
-  ([]
-     (list-migrations *ns*))
-  ([namespace]
-     (->> (get-namespace namespace)
-          (ns-publics)
-          (vals)
-          (filter (comp :migration meta))
-          (map var-get)
-          (sort-by :order))))
-
 (defn applied-migrations
   "List all migrations applied to the database."
   [db]
@@ -92,11 +51,3 @@
          (case action
            :migrate  (migrate db migration)
            :rollback (rollback db migration))))))
-
-(defn migrate-ns
-  "Migrate all migrations in a namespace using the supplied strategy. Works
-  like migrate-all."
-  ([db namespace]
-     (migrate-all db (list-migrations namespace)))
-  ([db namespace strategy]
-     (migrate-all db (list-migrations namespace) strategy)))

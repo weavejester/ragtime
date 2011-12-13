@@ -3,24 +3,6 @@
         ragtime.core)
   (:require [ragtime.strategy :as strategy]))
 
-(defmigration test-migrate-1)
-
-(defmigration test-migrate-2
-  {:up   (fn [_] (println "up"))
-   :down (fn [_] (println "down"))})
-
-(deftest test-defmigration
-  (testing "id based on symbol"
-    (is (= (:id test-migrate-1)
-           "ragtime.test.core/test-migrate-1")))
-  (testing "migrations listed in order"
-    (is (= (list-migrations 'ragtime.test.core)
-           [test-migrate-1
-            test-migrate-2])))
-  (testing "retains up and down keys"
-    (is (:up test-migrate-2))
-    (is (:down test-migrate-2))))
-
 (defrecord InMemoryDB [data]
   Migratable
   (add-migration-id [_ id]
