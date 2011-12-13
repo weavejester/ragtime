@@ -58,3 +58,14 @@
     (rollback-last database 2)
     (is (not (contains? @(:data database) :y)))
     (is (not (contains? @(:data database) :z)))))
+
+(deftest test-rollback-to
+  (let [database (in-memory-db)
+        assoc-x  (assoc-migration "assoc-x" :x 1)
+        assoc-y  (assoc-migration "assoc-y" :y 2)
+        assoc-z  (assoc-migration "assoc-z" :z 3)]
+    (migrate-all database [assoc-x assoc-y assoc-z])
+    (rollback-to database "assoc-x")
+    (is (= (:x @(:data database)) 1))
+    (is (not (contains? @(:data database) :y)))
+    (is (not (contains? @(:data database) :z)))))

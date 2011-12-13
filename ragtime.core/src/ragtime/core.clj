@@ -59,3 +59,17 @@
   ([db n]
      (doseq [migration (take n (reverse (applied-migrations db)))]
        (rollback db migration))))
+
+(defn rollback-to
+  "Rollback to a specific migration or migration ID."
+  [db migration]
+  (let [migrations   (applied-migrations db)
+        migration-id (if (map? migration)
+                       (:id migration)
+                       migration)
+        discards     (->> (reverse migrations)
+                          (take-while #(not= (:id %) migration-id)))]
+    (if (= discards migrations)
+      (throw (Exception. (str "Could not find migration '" migration-id "'")))
+      (doseq [migration discards]
+        (rollback db migration)))))
