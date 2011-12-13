@@ -13,11 +13,11 @@ how those migrations are generated. Think of it as "Ring for migrations".
 Add ragtime.core as a dependency if you just want the database-
 independent core:
 
-    [ragtime/ragtime.core "0.1.1"]
+    [ragtime/ragtime.core "0.2.0"]
 
 Or add the full library if you want support for SQL databases:
 
-    [ragtime "0.1.1"]
+    [ragtime "0.2.0"]
 
 ## Usage
 
