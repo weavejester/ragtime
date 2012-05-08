@@ -1,4 +1,4 @@
-(defproject ragtime/ragtime.sql "0.2.1-SNAPSHOT"
+(defproject ragtime/ragtime.sql "0.2.0"
   :description "Ragtime migrations for SQL databases"
   :dependencies [[org.clojure/clojure "1.2.1"]
                  [ragtime/ragtime.core "0.2.1-SNAPSHOT"]
