@@ -45,6 +45,8 @@
   ([db migrations]
      (migrate-all db migrations strategy/raise-error))
   ([db migrations strategy]
+     (doseq [migration migrations]
+       (remember-migration migration))
      (let [applied  (applied-migrations db)]
        (doseq [[action migration] (strategy applied migrations)]
          (case action
