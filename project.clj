@@ -1,4 +1,4 @@
-(defproject ragtime "0.2.0"
+(defproject ragtime "0.2.1-SNAPSHOT"
   :description "A database-independent migration library"
   :dependencies [[ragtime/ragtime.core "0.2.0"]
                  [ragtime/ragtime.sql "0.2.0"]]
