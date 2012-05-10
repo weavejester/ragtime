@@ -45,6 +45,22 @@
     (is (nil? (:y @(:data database))))
     (is (= (:z @(:data database)) 3))))
 
+(deftest test-migrate-all-apply-new
+  "Tests migrate-all, with the apply-new strategy, in the scenario where a
+  migration id is saved to a Migratable that persists after the application
+  terminates. On the next call to migrate-all, migrations present in the
+  Migratable should not be applied again, even if they have not yet been
+  remembered by the application."
+  (let [database (in-memory-db)
+        assoc-y  (assoc-migration "assoc-y" :y 2)
+        id       (:id assoc-y)]
+    ; add the migration id to the database to simulate that it has been applied
+    (add-migration-id database id)
+    ; but remove it from the remembered migrations.
+    (swap! defined-migrations dissoc id)
+    (migrate-all database [assoc-y] strategy/apply-new)
+    (is (nil? (:y @(:data database))))))
+
 (deftest test-rollback-last
   (let [database (in-memory-db)
         assoc-x  (assoc-migration "assoc-x" :x 1)
