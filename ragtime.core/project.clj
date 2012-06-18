@@ -1,3 +1,3 @@
-(defproject ragtime/ragtime.core "0.2.0"
+(defproject ragtime/ragtime.core "0.3.0-SNAPSHOT"
   :description "A database-independent migration library"
-  :dependencies [[org.clojure/clojure "1.2.1"]])
+  :dependencies [[org.clojure/clojure "1.3.0"]])
