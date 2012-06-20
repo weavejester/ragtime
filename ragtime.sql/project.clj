@@ -3,4 +3,5 @@
   :dependencies [[org.clojure/clojure "1.2.1"]
                  [ragtime/ragtime.core "0.2.1"]
                  [org.clojure/java.jdbc "0.1.1"]]
-  :dev-dependencies [[com.h2database/h2 "1.3.160"]])
+  :profiles
+  {:dev {:dependencies [[com.h2database/h2 "1.3.160"]]}})
