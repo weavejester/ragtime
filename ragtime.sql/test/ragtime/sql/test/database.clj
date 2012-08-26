@@ -1,12 +1,14 @@
 (ns ragtime.sql.test.database
   (:use [clojure.test]
         [ragtime.sql.database]
-        [ragtime.core :only [add-migration-id remove-migration-id
-                             applied-migration-ids]])
+        [ragtime.core :only [add-migration-id
+                             remove-migration-id
+                             applied-migration-ids
+                             connection]])
   (:require [clojure.java.jdbc :as sql]))
 
-(def test-db (ragtime.sql.database.SqlDatabase.
-              "org.h2.Driver" "h2" "mem:test_db" "test" ""))
+(def test-db
+  (connection "jdbc:h2:mem:test_db"))
 
 (defn h2-fixture [f]
   (sql/with-connection test-db

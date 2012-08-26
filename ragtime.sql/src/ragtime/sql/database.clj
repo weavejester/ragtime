@@ -1,5 +1,5 @@
 (ns ragtime.sql.database
-  (:use [ragtime.core :only (Migratable)])
+  (:use [ragtime.core :only (Migratable connection)])
   (:require [clojure.java.jdbc :as sql]
             [clojure.java.io :as io])
   (:import (java.util Date)))
@@ -15,7 +15,7 @@
                         [:created_at "datetime"])
       (catch Exception _))))
 
-(defrecord SqlDatabase [classname subprotocol subname user password]
+(defrecord SqlDatabase []
   Migratable
   (add-migration-id [db id]
     (sql/with-connection db
@@ -34,3 +34,6 @@
       (sql/with-query-results results
         ["SELECT id FROM ragtime_migrations ORDER BY created_at"]
         (vec (map :id results))))))
+
+(defmethod connection "jdbc" [url]
+  (map->SqlDatabase {:connection-uri url}))
