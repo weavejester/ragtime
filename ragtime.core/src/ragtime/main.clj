@@ -13,12 +13,23 @@
   (->> (str/split namespaces #"\s*,\s*")
        (map symbol)))
 
+(defn- wrap-println [f s]
+  (fn [& args]
+    (println s)
+    (apply f args)))
+
+(defn- verbose-migration [{:keys [id up down] :as migration}]
+  (assoc migration
+    :up   (wrap-println up   (str "Applying " id))
+    :down (wrap-println down (str "Rolling back " id))))
+
 (defn cli-main [database-url migrations-fn options]
   (doseq [ns (parse-namespaces options)]
     (require ns))
   (core/migrate-all
    (core/connection database-url)
-   ((load-var migrations-fn))))
+   (map verbose-migration
+        ((load-var migrations-fn)))))
 
 (def ^:private cli-options
   ["-r" "--require" "Comma-separated list of namespaces to require"])
