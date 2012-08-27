@@ -1,6 +1,7 @@
 (ns ragtime.sql.files
   (:require [clojure.java.io :as io]
-            [clojure.java.jdbc :as sql]))
+            [clojure.java.jdbc :as sql]
+            [clojure.string :as str]))
 
 (def ^:private migration-pattern
   #"(.*)\.(up|down)\.sql$")
@@ -17,13 +18,16 @@
        (sort)
        (group-by migration-id)))
 
+;; This needs to account for a lot more cases.
+(defn- sql-statements [s]
+  (str/split s #";"))
+
 (defn- run-sql-fn [file]
   (fn [db]
     (sql/with-connection db
       (sql/transaction
-       (let [f (slurp file)]
-         (prn f)
-         (sql/do-commands f))))))
+       (for [s (sql-statements (slurp file))]
+         (sql/do-commands s))))))
 
 (defn- make-migration [[id [down up]]]
   {:id   id
