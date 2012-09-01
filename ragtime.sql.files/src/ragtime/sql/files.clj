@@ -26,7 +26,7 @@
   (fn [db]
     (sql/with-connection db
       (sql/transaction
-       (for [s (sql-statements (slurp file))]
+       (doseq [s (sql-statements (slurp file))]
          (sql/do-commands s))))))
 
 (defn- make-migration [[id [down up]]]
