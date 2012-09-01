@@ -20,7 +20,9 @@
 
 ;; This needs to account for a lot more cases.
 (defn- sql-statements [s]
-  (str/split s #";"))
+  (->> (str/split s #";")
+       (map str/trim)
+       (remove str/blank?)))
 
 (defn- run-sql-fn [file]
   (fn [db]
