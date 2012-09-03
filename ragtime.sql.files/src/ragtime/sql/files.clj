@@ -18,9 +18,51 @@
        (sort)
        (group-by migration-id)))
 
-;; This needs to account for a lot more cases.
-(defn- sql-statements [s]
-  (->> (str/split s #";")
+;; Lexer borrowed from Clout
+
+(defn- lex-1 [src clauses]
+  (some
+    (fn [[re action]]
+      (let [matcher (re-matcher re src)]
+        (if (.lookingAt matcher)
+          [(if (fn? action) (action matcher) action)
+           (subs src (.end matcher))])))
+    (partition 2 clauses)))
+
+(defn- lex [src & clauses]
+  (loop [results []
+         src     src
+         clauses clauses]
+    (if-let [[result src] (lex-1 src clauses)]
+      (let [results (conj results result)]
+        (if (= src "")
+          results
+          (recur results src clauses))))))
+
+(defn- quoted-string [quote]
+  (re-pattern
+   (str quote "(?:[^" quote "]|\\\\" quote ")*" quote)))
+
+(def ^:private sql-end-marker
+  "__END_OF_SQL_SCRIPT__")
+
+(defn- mark-sql-statement-ends [sql]
+  (apply str
+    (lex sql
+      (quoted-string \') #(.group %)
+      (quoted-string \") #(.group %)
+      (quoted-string \`) #(.group %)
+      #"[^'\"`;]+"       #(.group %)
+      #";"               sql-end-marker)))
+
+(defn- split-sql [sql]
+  (-> (mark-sql-statement-ends sql)
+      (str/split (re-pattern sql-end-marker))))
+
+(defn sql-statements
+  "Split a SQL script into its component statements."
+  [sql]
+  (->> (split-sql sql)
        (map str/trim)
        (remove str/blank?)))
 
