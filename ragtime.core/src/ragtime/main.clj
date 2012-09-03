@@ -23,15 +23,17 @@
     :up   (wrap-println up   (str "Applying " id))
     :down (wrap-println down (str "Rolling back " id))))
 
+(defn- resolve-migrations [migration-fn]
+  (map verbose-migration ((load-var migration-fn))))
+
 (defn migrate [{:keys [database migrations]}]
   (core/migrate-all
    (core/connection database)
-   (map verbose-migration
-        ((load-var migrations)))))
+   (resolve-migrations migrations)))
 
 (defn rollback [{:keys [database migrations]} & [n]]
   (let [db (core/connection database)]
-    (doseq [m ((load-var migrations))]
+    (doseq [m (resolve-migrations migrations)]
       (core/remember-migration m))
     (core/rollback-last db (or n 1))))
 
