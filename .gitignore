@@ -4,5 +4,6 @@ pom.xml.asc
 lib/
 classes/
 target/
+checkouts/
 .lein-failures
 .lein-deps-sum
