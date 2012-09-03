@@ -1,8 +1,8 @@
-(defproject ragtime "0.3.0-SNAPSHOT"
+(defproject ragtime "0.3.0"
   :description "A database-independent migration library"
-  :dependencies [[ragtime/ragtime.core "0.3.0-SNAPSHOT"]
-                 [ragtime/ragtime.sql "0.3.0-SNAPSHOT"]
-                 [ragtime/ragtime.sql.files "0.3.0-SNAPSHOT"]]
+  :dependencies [[ragtime/ragtime.core "0.3.0"]
+                 [ragtime/ragtime.sql "0.3.0"]
+                 [ragtime/ragtime.sql.files "0.3.0"]]
   :plugins [[lein-sub "0.2.1"]
             [codox "0.6.1"]]
   :sub ["ragtime.core" "ragtime.sql" "ragtime.sql.files"]
