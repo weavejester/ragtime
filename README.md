@@ -44,6 +44,7 @@ If you want to integrate Ragtime into Leiningen:
 ## Documentation
 
 * [Wiki](https://github.com/weavejester/ragtime/wiki)
+* [API docs](http://weavejester.github.com/ragtime)
 
 ## License
 
