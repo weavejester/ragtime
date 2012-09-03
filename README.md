@@ -1,23 +1,39 @@
 # Ragtime
 
-Ragtime is a Clojure library for migrating structured data, and
-consists of ragtime.core, which is database-independent, and
-ragtime.sql, which includes functions suitable for migration SQL
-database schema.
+Ragtime is a Clojure library for migrating structured data. It defines
+a common interface for expressing migrations, much like [Ring][1]
+defines a common interface for expression web applications.
 
-Ragtime defines a common interface for expressing migrations, but not
-how those migrations are generated. Think of it as "Ring for migrations".
+[1]: https://github.com/ring-clojure/ring
+
+## Libraries
+
+* ragtime.core -
+  database independent tools and functions for managing migrations
+
+* ragtime.sql -
+  an adapter for applying migrations to a SQL database
+  
+* ragtime.sql.files -
+  provides a way of specifying migrations as SQL script files
+
+* ragtime.lein -
+  a Leiningen plugin that wraps ragtime.core
 
 ## Installation
 
 Add ragtime.core as a dependency if you just want the database-
 independent core:
 
-    [ragtime/ragtime.core "0.2.0"]
+    :dependencies [[ragtime/ragtime.core "0.3.0-SNAPSHOT"]]
 
 Or add the full library if you want support for SQL databases:
 
-    [ragtime "0.2.0"]
+    :dependencies [[ragtime "0.3.0-SNAPSHOT"]]
+
+If you want to integrate Ragtime into Leiningen:
+
+    :plugins [[ragtime/ragtime.lein "0.3.0-SNAPSHOT"]]
 
 ## Usage
 
