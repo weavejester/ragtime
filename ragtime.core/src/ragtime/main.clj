@@ -37,11 +37,23 @@
       (core/remember-migration m))
     (core/rollback-last db (or n 1))))
 
-(defn parse-args [args]
+(defn- parse-args [args]
   (cli args
-       ["-r" "--require" "Comma-separated list of namespaces to require"]
-       ["-d" "--database" "Database URL"]
+       ["-r" "--require"]
+       ["-d" "--database"]
        ["-m" "--migrations" "A function that returns a list of migrations"]))
+
+(def help-text
+  "Manage Ragtime migrations.
+
+Commands:
+migrate           Migrate to the latest version
+rollback [n]      Rollback n versions (defaults to 1)
+
+Options:
+-r  --require     Comma-separated list of namespaces to require
+-d  --database    URL of the database to apply the migrations
+-m  --migrations  A function that returns a list of migrations")
 
 (defn -main
   "Migrates a database to the latest version when supplied with a database URL
@@ -52,4 +64,7 @@
       (require ns))
     (case command
       "migrate"  (apply migrate options args)
-      "rollback" (apply rollback options args))))
+      "rollback" (apply rollback options args)
+      "help"     (println help-text)
+      :else      (do (println help-text)
+                     (System/exit 1)))))
