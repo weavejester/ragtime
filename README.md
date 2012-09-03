@@ -25,15 +25,21 @@ defines a common interface for expression web applications.
 Add ragtime.core as a dependency if you just want the database-
 independent core:
 
-    :dependencies [[ragtime/ragtime.core "0.3.0-SNAPSHOT"]]
+```clojure
+:dependencies [[ragtime/ragtime.core "0.3.0-SNAPSHOT"]]
+```
 
 Or add the full library if you want support for SQL databases:
 
-    :dependencies [[ragtime "0.3.0-SNAPSHOT"]]
+```clojure
+:dependencies [[ragtime "0.3.0-SNAPSHOT"]]
+```
 
 If you want to integrate Ragtime into Leiningen:
 
-    :plugins [[ragtime/ragtime.lein "0.3.0-SNAPSHOT"]]
+```clojure
+:plugins [[ragtime/ragtime.lein "0.3.0-SNAPSHOT"]]
+```
 
 ## Usage
 
