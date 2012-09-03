@@ -1,4 +1,4 @@
-(ns leiningen.migrate
+(ns leiningen.ragtime
   (:require [leinjacker.deps :as deps])
   (:use [leiningen.run :only (run)]))
 
@@ -7,10 +7,15 @@
       (deps/add-if-missing '[ragtime/ragtime.core "0.3.0-SNAPSHOT"])
       (deps/add-if-missing '[ragtime/ragtime.sql "0.3.0-SNAPSHOT"])))
 
-(defn migrate
-  "Migrate the project database to the latest version."
-  [project & args]
+(defn ragtime
+  "Run ragtime.main with the options specified in the project file."
+  [project command & args]
   (let [migrations (-> project :ragtime :migrations str)
         database   (-> project :ragtime :database)
         project    (add-ragtime-deps project)]
-    (run project "-m" "ragtime.main" "-r" "ragtime.sql.database" database migrations)))
+    (apply run project
+           "-m" "ragtime.main"
+           "-r" "ragtime.sql.database"
+           "-d" database
+           "-m" migrations
+           command args)))

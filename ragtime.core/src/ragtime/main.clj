@@ -23,23 +23,31 @@
     :up   (wrap-println up   (str "Applying " id))
     :down (wrap-println down (str "Rolling back " id))))
 
-(defn cli-main [database-url migrations-fn options]
-  (doseq [ns (parse-namespaces options)]
-    (require ns))
+(defn migrate [{:keys [database migrations]}]
   (core/migrate-all
-   (core/connection database-url)
+   (core/connection database)
    (map verbose-migration
-        ((load-var migrations-fn)))))
+        ((load-var migrations)))))
 
-(def ^:private cli-options
-  ["-r" "--require" "Comma-separated list of namespaces to require"])
+(defn rollback [{:keys [database migrations]} & [n]]
+  (let [db (core/connection database)]
+    (doseq [m ((load-var migrations))]
+      (core/remember-migration m))
+    (core/rollback-last db (or n 1))))
+
+(defn parse-args [args]
+  (cli args
+       ["-r" "--require" "Comma-separated list of namespaces to require"]
+       ["-d" "--database" "Database URL"]
+       ["-m" "--migrations" "A function that returns a list of migrations"]))
 
 (defn -main
   "Migrates a database to the latest version when supplied with a database URL
   and a function that returns a sequence of migrations."
   [& args]
-  (let [[opts args banner] (cli args cli-options)]
-    (when (or (:help opts) (empty? args))
-      (println banner)
-      (System/exit 0))
-    (apply cli-main (conj args opts))))
+  (let [[options [command & args]] (parse-args args)]
+    (doseq [ns (parse-namespaces options)]
+      (require ns))
+    (case command
+      "migrate"  (apply migrate options args)
+      "rollback" (apply rollback options args))))
