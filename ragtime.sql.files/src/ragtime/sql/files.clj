@@ -82,5 +82,8 @@
 
 (defn migrations
   "Return a list of migrations to apply."
-  ([]    (migrations default-dir))
-  ([dir] (map make-migration (get-migration-files dir))))
+  ([] (migrations default-dir))
+  ([dir]
+     (->> (get-migration-files dir)
+          (map make-migration)
+          (sort-by :id))))
