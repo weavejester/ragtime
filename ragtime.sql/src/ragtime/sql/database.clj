@@ -2,7 +2,8 @@
   (:use [ragtime.core :only (Migratable connection)])
   (:require [clojure.java.jdbc :as sql]
             [clojure.java.io :as io])
-  (:import (java.util Date)))
+  (:import (java.util Date)
+           (java.sql Timestamp)))
 
 (def ^:private migrations-table "ragtime_migrations")
 
@@ -12,7 +13,7 @@
     (try
       (sql/create-table migrations-table
                         [:id "varchar(255)"]
-                        [:created_at "datetime"])
+                        [:created_at "timestamp"])
       (catch Exception _))))
 
 (defrecord SqlDatabase []
@@ -21,8 +22,8 @@
     (sql/with-connection db
       (ensure-migrations-table-exists db)
       (sql/insert-values migrations-table
-                         [:id :created_at] [(str id) (Date.)])))
-  
+                         [:id :created_at] [(str id) (Timestamp. (.getTime (Date.)))])))
+
   (remove-migration-id [db id]
     (sql/with-connection db
       (ensure-migrations-table-exists db)
