@@ -49,9 +49,8 @@
       (core/remember-migration m))
     (core/rollback-last db (or n 1))))
 
-(defn new [args]
- (let [name (first args)]
-   (doseq [filename (migration-filenames name)] (spit filename ""))))
+(defn new [name]
+  (doseq [filename (migration-filenames name)] (spit filename "")))
 
 (defn- parse-args [args]
   (cli args
