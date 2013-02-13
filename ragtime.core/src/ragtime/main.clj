@@ -2,9 +2,7 @@
   "Migrate databases via the command line."
   (:use [clojure.tools.cli :only (cli)])
   (:require [ragtime.core :as core]
-            [clojure.string :as str]
-            [clj-time.format :as format-time]
-            [clj-time.core :as time]))
+            [clojure.string :as str]))
 
 (defn- load-var [var-name]
   (let [var-sym (symbol var-name)]
@@ -28,16 +26,6 @@
 (defn- resolve-migrations [migration-fn]
   (map verbose-migration ((load-var migration-fn))))
 
-(defn- timestamp []
-  (let [formatter (format-time/formatter "yyyyMMddhhmmss")]
-    (format-time/unparse formatter (time/now))))
-
-(defn migration-filenames [name]
-  (let [now-timestamp (timestamp)
-        path "migrations/"]
-    [(str path now-timestamp "-" name ".up.sql")
-     (str path now-timestamp "-" name ".down.sql")]))
-
 (defn migrate [{:keys [database migrations]}]
   (core/migrate-all
    (core/connection database)
@@ -48,9 +36,6 @@
     (doseq [m (resolve-migrations migrations)]
       (core/remember-migration m))
     (core/rollback-last db (or n 1))))
-
-(defn new [name]
-  (doseq [filename (migration-filenames name)] (spit filename "")))
 
 (defn- parse-args [args]
   (cli args
@@ -81,7 +66,6 @@ Options:
     (case command
       "migrate"  (apply migrate options args)
       "rollback" (apply rollback options args)
-      "new"      (apply new args)
       "help"     (println help-text)
       :else      (do (println help-text)
                      (System/exit 1)))))

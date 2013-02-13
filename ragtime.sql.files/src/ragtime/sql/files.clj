@@ -1,7 +1,9 @@
 (ns ragtime.sql.files
   (:require [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clj-time.format :as format-time]
+            [clj-time.core :as time]))
 
 (def ^:private migration-pattern
   #"(.*)\.(up|down)\.sql$")
@@ -78,7 +80,19 @@
    :up   (run-sql-fn up)
    :down (run-sql-fn down)})
 
+(defn- timestamp []
+(let [formatter (format-time/formatter "yyyyMMddhhmmss")]
+  (format-time/unparse formatter (time/now))))
+
 (def ^:private default-dir "migrations")
+
+(defn migration-filenames [name]
+(let [now-timestamp (timestamp)]
+  [(str default-dir "/" now-timestamp "-" name ".up.sql")
+   (str default-dir "/" now-timestamp "-" name ".down.sql")]))
+
+(defn new [name]
+  (doseq [filename (migration-filenames name)] (spit filename "")))
 
 (defn migrations
   "Return a list of migrations to apply."
