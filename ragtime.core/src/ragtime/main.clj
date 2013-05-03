@@ -49,6 +49,7 @@
 Commands:
 migrate           Migrate to the latest version
 rollback [n]      Rollback n versions (defaults to 1)
+new [name]        Create up & down migration files for the new migration name
 
 Options:
 -r  --require     Comma-separated list of namespaces to require
