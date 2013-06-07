@@ -28,7 +28,7 @@ Add ragtime.core as a dependency if you just want the database-
 independent core:
 
 ```clojure
-:dependencies [[ragtime/ragtime.core "0.3.3]]
+:dependencies [[ragtime/ragtime.core "0.3.3"]]
 ```
 
 Or add the full library if you want support for SQL databases:
@@ -40,7 +40,7 @@ Or add the full library if you want support for SQL databases:
 If you want to integrate Ragtime into Leiningen:
 
 ```clojure
-:plugins [[ragtime/ragtime.lein "0.3.3]]
+:plugins [[ragtime/ragtime.lein "0.3.3"]]
 ```
 
 ## Documentation
