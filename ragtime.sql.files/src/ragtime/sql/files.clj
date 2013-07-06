@@ -43,35 +43,11 @@
   (re-pattern
    (str quote "(?:[^" quote "]|\\\\" quote ")*" quote)))
 
-(def ^:private sql-end-marker
-  "__END_OF_SQL_SCRIPT__")
-
-(defn- mark-sql-statement-ends [sql]
-  (apply str
-    (lex sql
-      (quoted-string \') #(.group %)
-      (quoted-string \") #(.group %)
-      (quoted-string \`) #(.group %)
-      #"[^'\"`;]+"       #(.group %)
-      #";"               sql-end-marker)))
-
-(defn- split-sql [sql]
-  (-> (mark-sql-statement-ends sql)
-      (str/split (re-pattern sql-end-marker))))
-
-(defn sql-statements
-  "Split a SQL script into its component statements."
-  [sql]
-  (->> (split-sql sql)
-       (map str/trim)
-       (remove str/blank?)))
-
 (defn- run-sql-fn [file]
   (fn [db]
     (sql/with-connection db
       (sql/transaction
-       (doseq [s (sql-statements (slurp file))]
-         (sql/do-commands s))))))
+       (sql/do-commands (slurp file))))))
 
 (defn- make-migration [[id [down up]]]
   {:id   id
