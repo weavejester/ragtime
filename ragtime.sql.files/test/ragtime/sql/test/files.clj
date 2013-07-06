@@ -16,15 +16,6 @@
       (str/upper-case table-name)]
      (vec rs))))
 
-(deftest test-sql-statements
-  (are [x y] (= (sql-statements x) y)
-    "foo;bar"    ["foo" "bar"]
-    "foo;; bar;" ["foo" "bar"]
-    "'foo;bar'"  ["'foo;bar'"]
-    "`foo;bar`"  ["`foo;bar`"]
-    "\"fo;ba\""  ["\"fo;ba\""]
-    "'a;b' c; d" ["'a;b' c" "d"]))
-
 (deftest test-migrations
   (testing "no migration directory"
     (is (= (migrations) [])))
