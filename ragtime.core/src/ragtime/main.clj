@@ -35,7 +35,8 @@
   (let [db (core/connection database)]
     (doseq [m (resolve-migrations migrations)]
       (core/remember-migration m))
-    (core/rollback-last db (or n 1))))
+    (core/rollback-last db (or (when n (Integer/parseInt n)) 
+                               1))))
 
 (defn- parse-args [args]
   (cli args
