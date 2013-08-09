@@ -4,7 +4,7 @@
                  [ragtime/ragtime.sql "0.3.3"]
                  [ragtime/ragtime.sql.files "0.3.3"]]
   :plugins [[lein-sub "0.2.1"]
-            [codox "0.6.1"]]
+            [codox "0.6.4"]]
   :sub ["ragtime.core" "ragtime.sql" "ragtime.sql.files"]
   :codox {:sources ["ragtime.core/src"
                     "ragtime.sql/src"
