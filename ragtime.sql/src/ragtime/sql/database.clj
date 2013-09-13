@@ -9,12 +9,9 @@
 
 (defn ^:internal ensure-migrations-table-exists [db]
   ;; TODO: is there a portable way to detect table existence?
-  (sql/with-connection db
-    (try
-      (sql/create-table migrations-table
-                        [:id "varchar(255)"]
-                        [:created_at "varchar(32)"])
-      (catch Exception _))))
+  (try
+    (sql/execute! db [(format "CREATE TABLE %s (id varchar(255), created_at varchar(32))" migrations-table)])
+    (catch Exception _)))
 
 (defn format-datetime [dt]
   (-> (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS")
@@ -23,23 +20,18 @@
 (defrecord SqlDatabase []
   Migratable
   (add-migration-id [db id]
-    (sql/with-connection db
-      (ensure-migrations-table-exists db)
-      (sql/insert-values migrations-table
-                         [:id :created_at]
-                         [(str id) (format-datetime (Date.))])))
-  
+    (ensure-migrations-table-exists db)
+    (apply sql/insert! db :ragtime_migrations
+           [[:id :created_at]
+            [(str id) (format-datetime (Date.))]]))
+
   (remove-migration-id [db id]
-    (sql/with-connection db
-      (ensure-migrations-table-exists db)
-      (sql/delete-rows migrations-table ["id = ?" id])))
+    (ensure-migrations-table-exists db)
+    (apply sql/delete! db :ragtime_migrations [["id = ?" id]]))
 
   (applied-migration-ids [db]
-    (sql/with-connection db
-      (ensure-migrations-table-exists db)
-      (sql/with-query-results results
-        ["SELECT id FROM ragtime_migrations ORDER BY created_at"]
-        (vec (map :id results))))))
+    (ensure-migrations-table-exists db)
+    (vec (map :id (sql/query db ["SELECT id FROM ragtime_migrations ORDER BY created_at"])))))
 
 (defmethod connection "jdbc" [url]
   (map->SqlDatabase {:connection-uri url}))
