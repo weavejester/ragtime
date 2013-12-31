@@ -1,8 +1,7 @@
 (ns ragtime.sql.database
   (:use [ragtime.core :only (Migratable connection)])
   (:require [clojure.java.jdbc :as sql]
-            [clojure.java.io :as io]
-            [java-jdbc.ddl :as ddl])
+            [clojure.java.io :as io])
   (:import java.util.Date
            java.text.SimpleDateFormat))
 
@@ -10,12 +9,11 @@
 
 (defn ^:internal ensure-migrations-table-exists [conn]
   ;; TODO: is there a portable way to detect table existence?
-    (try
-      (sql/db-do-commands conn
-        (ddl/create-table migrations-table
-                          [:id "varchar(255)"]
-                          [:created_at "varchar(32)"]))
-      (catch Exception _)))
+  (try
+    (sql/db-do-commands conn (sql/create-table-ddl migrations-table 
+                                                    [:id "varchar(255)"]
+                                                    [:created_at "varchar(32)"]))
+    (catch Exception _)))
 
 (defn format-datetime [dt]
   (-> (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS")
