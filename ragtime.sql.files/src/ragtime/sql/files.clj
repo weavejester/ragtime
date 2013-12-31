@@ -1,6 +1,6 @@
 (ns ragtime.sql.files
   (:require [clojure.java.io :as io]
-            [clojure.java.jdbc :as sql]
+            [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]))
 
 (def ^:private migration-pattern
@@ -68,10 +68,9 @@
 
 (defn- run-sql-fn [file]
   (fn [db]
-    (sql/with-connection db
-      (sql/transaction
-       (doseq [s (sql-statements (slurp file))]
-         (sql/do-commands s))))))
+    (jdbc/with-db-transaction [conn db]
+      (doseq [statement (sql-statements (slurp file))]
+        (jdbc/execute! conn [statement])))))
 
 (defn- make-migration [[id [down up]]]
   {:id   id

@@ -5,13 +5,13 @@
                              remove-migration-id
                              applied-migration-ids
                              connection]])
-  (:require [clojure.java.jdbc :as sql]))
+  (:require [clojure.java.jdbc :as jdbc]))
 
 (def test-db
   (connection "jdbc:h2:mem:test_db"))
 
 (defn h2-fixture [f]
-  (sql/with-connection test-db
+  (jdbc/with-db-connection [_ test-db] ; keep a connection open to keep the DB in memory for the whole test
     (f)))
 
 (use-fixtures :each h2-fixture)
