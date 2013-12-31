@@ -1,5 +1,5 @@
 (ns ragtime.sql.test.files
-  (:require [clojure.java.jdbc :as sql]
+  (:require [clojure.java.jdbc :as jdbc]
             [clojure.string :as str])
   (:use clojure.test
         ragtime.sql.files
@@ -11,10 +11,9 @@
 
 (defn table-exists? [table-name]
   (not-empty
-   (sql/with-query-results rs
+   (jdbc/query test-db
      ["select true from information_schema.tables where table_name = ?"
-      (str/upper-case table-name)]
-     (vec rs))))
+      (str/upper-case table-name)])))
 
 (deftest test-sql-statements
   (are [x y] (= (sql-statements x) y)
@@ -33,6 +32,5 @@
       (is (= (count migs) 1))
       (is (= (:id (first migs)) "20111202110600-create-foo-table"))
       (migrate-all test-db migs)
-      (sql/with-connection test-db
-        (is (table-exists? "ragtime_migrations"))
-        (is (table-exists? "foo"))))))
+      (is (table-exists? "ragtime_migrations"))
+      (is (table-exists? "foo")))))

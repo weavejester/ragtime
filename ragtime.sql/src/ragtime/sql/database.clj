@@ -1,6 +1,6 @@
 (ns ragtime.sql.database
   (:use [ragtime.core :only (Migratable connection)])
-  (:require [clojure.java.jdbc :as sql]
+  (:require [clojure.java.jdbc :as jdbc]
             [clojure.java.io :as io])
   (:import java.util.Date
            java.text.SimpleDateFormat))
@@ -9,11 +9,11 @@
 
 (defn ^:internal ensure-migrations-table-exists [db]
   ;; TODO: is there a portable way to detect table existence?
-  (sql/with-connection db
+  (let [ddl (jdbc/create-table-ddl migrations-table 
+                                   [:id "varchar(255)"]
+                                   [:created_at "varchar(32)"])]
     (try
-      (sql/create-table migrations-table
-                        [:id "varchar(255)"]
-                        [:created_at "varchar(32)"])
+      (jdbc/execute! db [ddl])
       (catch Exception _))))
 
 (defn format-datetime [dt]
@@ -23,23 +23,19 @@
 (defrecord SqlDatabase []
   Migratable
   (add-migration-id [db id]
-    (sql/with-connection db
-      (ensure-migrations-table-exists db)
-      (sql/insert-values migrations-table
-                         [:id :created_at]
-                         [(str id) (format-datetime (Date.))])))
+    (ensure-migrations-table-exists db)
+    (jdbc/insert! db migrations-table {:id (str id)
+                                       :created_at (format-datetime (Date.))}))
   
   (remove-migration-id [db id]
-    (sql/with-connection db
-      (ensure-migrations-table-exists db)
-      (sql/delete-rows migrations-table ["id = ?" id])))
+    (ensure-migrations-table-exists db)
+    (jdbc/delete! db migrations-table ["id = ?" id]))
 
   (applied-migration-ids [db]
-    (sql/with-connection db
-      (ensure-migrations-table-exists db)
-      (sql/with-query-results results
-        ["SELECT id FROM ragtime_migrations ORDER BY created_at"]
-        (vec (map :id results))))))
+    (ensure-migrations-table-exists db)
+    (jdbc/query db
+      ["SELECT id FROM ragtime_migrations ORDER BY created_at"]
+      :row-fn :id)))
 
 (defmethod connection "jdbc" [url]
   (map->SqlDatabase {:connection-uri url}))
