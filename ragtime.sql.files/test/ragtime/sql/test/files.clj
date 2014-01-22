@@ -9,12 +9,11 @@
 (def test-db
   (connection "jdbc:h2:mem:test_db;DB_CLOSE_DELAY=-1"))
 
-(defn table-exists? [table-name]
+(defn table-exists? [conn table-name]
   (not-empty
-   (sql/with-query-results rs
+   (sql/query conn
      ["select true from information_schema.tables where table_name = ?"
-      (str/upper-case table-name)]
-     (vec rs))))
+      (str/upper-case table-name)])))
 
 (deftest test-sql-statements
   (are [x y] (= (sql-statements x) y)
@@ -33,6 +32,6 @@
       (is (= (count migs) 1))
       (is (= (:id (first migs)) "20111202110600-create-foo-table"))
       (migrate-all test-db migs)
-      (sql/with-connection test-db
-        (is (table-exists? "ragtime_migrations"))
-        (is (table-exists? "foo"))))))
+      (sql/with-db-connection [conn test-db]
+        (is (table-exists? conn "ragtime_migrations"))
+        (is (table-exists? conn "foo"))))))
