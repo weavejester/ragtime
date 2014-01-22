@@ -8,13 +8,7 @@
   (:require [clojure.java.jdbc :as sql]))
 
 (def test-db
-  (connection "jdbc:h2:mem:test_db"))
-
-(defn h2-fixture [f]
-  (sql/with-connection test-db
-    (f)))
-
-(use-fixtures :each h2-fixture)
+  (connection "jdbc:h2:mem:test_db;DB_CLOSE_DELAY=-1"))
 
 (deftest test-add-migrations
   (add-migration-id test-db "12")

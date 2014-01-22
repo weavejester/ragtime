@@ -68,10 +68,9 @@
 
 (defn- run-sql-fn [file]
   (fn [db]
-    (sql/with-connection db
-      (sql/transaction
+      (sql/with-db-transaction [conn db]
        (doseq [s (sql-statements (slurp file))]
-         (sql/do-commands s))))))
+         (sql/db-do-commands conn s)))))
 
 (defn- make-migration [[id [down up]]]
   {:id   id
