@@ -1,9 +1,19 @@
 (ns ragtime.sql.database
   (:use [ragtime.core :only (Migratable connection)])
-  (:require [clojure.java.jdbc :as sql]
-            [clojure.java.io :as io])
-  (:import java.util.Date
+  (:require [clojure.java.io :as io])
+  (:import java.io.FileNotFoundException
+           java.util.Date
            java.text.SimpleDateFormat))
+
+(defn require-jdbc [ns-alias]
+  (try
+    (require 'clojure.java.jdbc.deprecated)
+    (alias ns-alias 'clojure.java.jdbc.deprecated)
+    (catch FileNotFoundException ex
+      (require 'clojure.java.jdbc)
+      (alias ns-alias 'clojure.java.jdbc))))
+
+(require-jdbc 'sql)
 
 (def ^:private migrations-table "ragtime_migrations")
 
