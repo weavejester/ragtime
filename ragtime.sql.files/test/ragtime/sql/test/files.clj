@@ -1,10 +1,11 @@
 (ns ragtime.sql.test.files
-  (:require [clojure.java.jdbc :as sql]
-            [clojure.string :as str])
+  (:require [clojure.string :as str])
   (:use clojure.test
         ragtime.sql.files
         ragtime.sql.database
         ragtime.core))
+
+(ragtime.sql.database/require-jdbc 'sql)
 
 (def test-db
   (connection "jdbc:h2:mem:test_db;DB_CLOSE_DELAY=-1"))
