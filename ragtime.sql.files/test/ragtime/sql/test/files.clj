@@ -35,4 +35,12 @@
       (migrate-all test-db migs)
       (sql/with-connection test-db
         (is (table-exists? "ragtime_migrations"))
+        (is (table-exists? "foo")))))
+  (testing "custom migration directory in classpath"
+    (let [migs (migrations "classpath:migrations")]
+      (is (= (count migs) 1))
+      (is (= (:id (first migs)) "20111202110600-create-foo-table"))
+      (migrate-all test-db migs)
+      (sql/with-connection test-db
+        (is (table-exists? "ragtime_migrations"))
         (is (table-exists? "foo"))))))

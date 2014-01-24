@@ -1,25 +1,50 @@
 (ns ragtime.sql.files
   (:require [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]
+            [clojure.java.classpath :as cp]
             [clojure.string :as str]))
 
 (def ^:private migration-pattern
   #"(.*)\.(up|down)\.sql$")
 
-(defn- migration? [file]
-  (re-find migration-pattern (.getName (io/file file))))
+(defn- migration? [url]
+  (re-find migration-pattern (.getPath url)))
 
-(defn- migration-id [file]
-  (second (re-find migration-pattern (.getName (io/file file)))))
+(defn- migration-id [url]
+  (-> (second (re-find migration-pattern (.getPath url)))
+      (str/replace #".*/" "")))
 
-(defn- get-migration-files [dir]
-  (->> (.listFiles (io/file dir))
+(defn- list-classpath-directories [path]
+  (->> (cp/classpath-directories)
+       (map #(io/file % path))
+       (filter #(and (.exists %) (.isDirectory %)))
+       (mapcat #(.listFiles %))
+       (map io/as-url)))
+
+(defn- list-classpath-jarfiles [path]
+  (->> (mapcat cp/filenames-in-jar (cp/classpath-jarfiles))
+       (filter #(.startsWith % path))
+       (map #(io/resource %))))
+
+(defmulti list-files (partial re-find #"\w*:"))
+
+(defmethod list-files "classpath:" [path]
+  (let [p (str/replace path "classpath:" "")]
+    (concat (list-classpath-directories p)
+            (list-classpath-jarfiles p))))
+
+(defmethod list-files nil [path]
+  (->> (io/file path)
+       (.listFiles)
+       (map io/as-url)))
+
+(defn- get-migration-files [path]
+  (->> (list-files path)
        (filter migration?)
-       (sort)
+       (sort-by #(.getPath %))
        (group-by migration-id)))
 
 ;; Lexer borrowed from Clout
-
 (defn- lex-1 [src clauses]
   (some
     (fn [[re action]]
@@ -78,12 +103,12 @@
    :up   (run-sql-fn up)
    :down (run-sql-fn down)})
 
-(def ^:private default-dir "migrations")
+(def ^:private default-path "migrations")
 
 (defn migrations
   "Return a list of migrations to apply."
-  ([] (migrations default-dir))
-  ([dir]
-     (->> (get-migration-files dir)
+  ([] (migrations default-path))
+  ([path]
+     (->> (get-migration-files path)
           (map make-migration)
           (sort-by :id))))
