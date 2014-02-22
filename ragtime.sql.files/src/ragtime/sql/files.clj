@@ -1,7 +1,9 @@
 (ns ragtime.sql.files
   (:require [clojure.java.io :as io]
-            [clojure.java.jdbc :as sql]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [ragtime.sql.database]))
+
+(ragtime.sql.database/require-jdbc 'sql)
 
 (def ^:private migration-pattern
   #"(.*)\.(up|down)\.sql$")

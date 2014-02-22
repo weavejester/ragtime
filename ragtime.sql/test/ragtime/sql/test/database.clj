@@ -4,8 +4,9 @@
         [ragtime.core :only [add-migration-id
                              remove-migration-id
                              applied-migration-ids
-                             connection]])
-  (:require [clojure.java.jdbc :as sql]))
+                             connection]]))
+
+(require-jdbc 'sql)
 
 (def test-db
   (connection "jdbc:h2:mem:test_db"))
