@@ -68,13 +68,18 @@
        (map str/trim)
        (remove str/blank?)))
 
+(defn postgres? [conn]
+  (-> conn class .getName (.contains "postgresql")))
+
 (defn- run-sql-fn [file]
   (fn [db]
     (sql/with-connection db
       (sql/transaction
        (try
-         (doseq [s (sql-statements (slurp file))]
-           (sql/do-commands s))
+         (if (postgres? (sql/connection))
+           (sql/do-commands (slurp file))
+           (doseq [s (sql-statements (slurp file))]
+             (sql/do-commands s)))
          (catch java.sql.SQLException e
            (if (.getNextException e)
              (.printStackTrace (.getNextException e)))
