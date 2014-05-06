@@ -71,6 +71,11 @@
 (defn postgres? [conn]
   (-> conn class .getName (.contains "postgresql")))
 
+(defn- print-next-ex-trace [e]
+  (when e
+    (when-let [next-e (.getNextException e)]
+      (.printStackTrace next-e))))
+
 (defn- run-sql-fn [file]
   (fn [db]
     (sql/with-connection db
@@ -80,9 +85,11 @@
            (sql/do-commands (slurp file))
            (doseq [s (sql-statements (slurp file))]
              (sql/do-commands s)))
+         (catch java.sql.BatchUpdateException e
+           (print-next-ex-trace e)
+           (throw e))
          (catch java.sql.SQLException e
-           (if (.getNextException e)
-             (.printStackTrace (.getNextException e)))
+           (print-next-ex-trace e)
            (throw e)))))))
 
 (defn- make-migration [[id [down up]]]
