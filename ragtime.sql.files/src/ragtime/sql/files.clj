@@ -61,11 +61,12 @@
 (defn- mark-sql-statement-ends [sql]
   (apply str
     (lex sql
-      (quoted-string \') #(.group %)
-      (quoted-string \") #(.group %)
-      (quoted-string \`) #(.group %)
-      #"[^'\"`;]+"       #(.group %)
-      #";"               sql-end-marker)))
+      (quoted-string \')            #(.group %)
+      (quoted-string \")            #(.group %)
+      (quoted-string \`)            #(.group %)
+      #"--[^\n]*\n?"                "\n"
+      #"(?:[^'\"`;-]|-(?:[^-]|$))+" #(.group %)
+      #";"                          sql-end-marker)))
 
 (defn- split-sql [sql]
   (-> (mark-sql-statement-ends sql)
@@ -93,8 +94,12 @@
        (try
          (if (postgres? (sql/connection))
            (sql/do-prepared (slurp file))
-           (doseq [s (sql-statements (slurp file))]
-             (sql/do-commands s)))
+           (let [sql (slurp file)
+                 statements (sql-statements sql)]
+             (when (and (empty? statements) (not (str/blank? sql)))
+               (println "Warning: migration is empty"))
+             (doseq [s statements]
+                    (sql/do-commands s))))
          (catch java.sql.BatchUpdateException e
            (print-next-ex-trace e)
            (throw e))
