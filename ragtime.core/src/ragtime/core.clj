@@ -28,8 +28,9 @@
 (defn applied-migrations
   "List all migrations applied to the database."
   [db]
-  (->> (applied-migration-ids db)
-       (map @defined-migrations)))
+  ;; see issue #43
+  (remove nil? (->> (applied-migration-ids db)
+                    (map @defined-migrations))))
 
 (defn migrate
   "Apply a single migration to a database."
