@@ -82,7 +82,7 @@
       (sql/transaction
        (try
          (if (postgres? (sql/connection))
-           (sql/do-commands (slurp file))
+           (sql/do-prepared (slurp file))
            (doseq [s (sql-statements (slurp file))]
              (sql/do-commands s)))
          (catch java.sql.BatchUpdateException e
