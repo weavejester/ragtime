@@ -15,13 +15,11 @@
 
 (require-jdbc 'sql)
 
-(def ^:private migrations-table "ragtime_migrations")
-
 (defn ^:internal ensure-migrations-table-exists [db]
   ;; TODO: is there a portable way to detect table existence?
   (sql/with-connection db
     (try
-      (sql/create-table migrations-table
+      (sql/create-table (:migrations-table db)
                         [:id "varchar(255)"]
                         [:created_at "varchar(32)"])
       (catch Exception _))))
@@ -35,21 +33,25 @@
   (add-migration-id [db id]
     (sql/with-connection db
       (ensure-migrations-table-exists db)
-      (sql/insert-values migrations-table
+      (sql/insert-values (:migrations-table db)
                          [:id :created_at]
                          [(str id) (format-datetime (Date.))])))
   
   (remove-migration-id [db id]
     (sql/with-connection db
       (ensure-migrations-table-exists db)
-      (sql/delete-rows migrations-table ["id = ?" id])))
+      (sql/delete-rows (:migrations-table db) ["id = ?" id])))
 
   (applied-migration-ids [db]
     (sql/with-connection db
       (ensure-migrations-table-exists db)
       (sql/with-query-results results
-        ["SELECT id FROM ragtime_migrations ORDER BY created_at"]
+        [(str "SELECT id FROM " (:migrations-table db) " ORDER BY created_at")]
         (vec (map :id results))))))
 
-(defmethod connection "jdbc" [url]
-  (map->SqlDatabase {:connection-uri url}))
+
+(def ^:private migrations-table "ragtime_migrations")
+
+(defmethod connection "jdbc" [opts]
+  (map->SqlDatabase {:connection-uri (:database opts)
+                      :migrations-table (or (:table opts) migrations-table)}))
