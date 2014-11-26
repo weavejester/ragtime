@@ -9,7 +9,7 @@
 (require-jdbc 'sql)
 
 (def test-db
-  (connection "jdbc:h2:mem:test_db"))
+  (connection {:url "jdbc:h2:mem:test_db"}))
 
 (defn h2-fixture [f]
   (sql/with-connection test-db

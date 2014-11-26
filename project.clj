@@ -11,4 +11,5 @@
                     "ragtime.sql.files/src"]
           :exclude [ragtime.sql.database ragtime.main]}
   :profiles
-  {:dev {:dependencies [[codox/codox.core "0.6.7"]]}})
+  {:dev {:dependencies [[org.clojure/clojure "1.6.0"]
+                        [codox/codox.core "0.6.7"]]}})

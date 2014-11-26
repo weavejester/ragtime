@@ -15,8 +15,8 @@
 (defmulti connection
   "Create a Migratable database connection from a URL. Dispatches on the URL
   scheme."
-  (fn [url]
-    (.getScheme (URI. url))))
+  (fn [{:keys [database]}]
+    (.getScheme (URI. database))))
 
 (defonce defined-migrations (atom {}))
 

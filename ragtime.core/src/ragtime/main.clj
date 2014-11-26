@@ -26,9 +26,9 @@
 (defn- resolve-migrations [migration-fn]
   (map verbose-migration ((load-var migration-fn))))
 
-(defn migrate [{:keys [database migrations]}]
+(defn migrate [{:keys [migrations] :as options}]
   (core/migrate-all
-   (core/connection database)
+   (core/connection options)
    (resolve-migrations migrations)))
 
 (defn rollback [{:keys [database migrations]} & [n]]
@@ -42,7 +42,8 @@
   (cli args
        ["-r" "--require"]
        ["-d" "--database"]
-       ["-m" "--migrations" "A function that returns a list of migrations"]))
+       ["-m" "--migrations" "A function that returns a list of migrations"]
+       ["-t" "--table" "migrations table name"]))
 
 (def help-text
   "Manage Ragtime migrations.
@@ -54,7 +55,8 @@ rollback [n]      Rollback n versions (defaults to 1)
 Options:
 -r  --require     Comma-separated list of namespaces to require
 -d  --database    URL of the database to apply the migrations
--m  --migrations  A function that returns a list of migrations")
+-m  --migrations  A function that returns a list of migrations
+-t  --table       The name of the migrations table")
 
 (defn -main
   "Migrates a database to the latest version when supplied with a database URL
