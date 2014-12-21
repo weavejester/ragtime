@@ -93,6 +93,8 @@
            (throw e)))))))
 
 (defn- make-migration [[id [down up]]]
+  (assert down (str "Down migration file missing for migration " id))
+  (assert up (str "Up migration file missing for migration " id))
   {:id   id
    :up   (run-sql-fn up)
    :down (run-sql-fn down)})
