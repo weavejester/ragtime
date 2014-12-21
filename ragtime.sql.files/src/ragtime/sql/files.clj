@@ -14,11 +14,21 @@
 (defn- migration-id [file]
   (second (re-find migration-pattern (.getName (io/file file)))))
 
+(defn- assert-migrations-complete [migration-files]
+  (let [incomplete-files (remove #(= (count (val %)) 2)
+                                 migration-files)]
+    (assert (empty? incomplete-files)            
+            (str "Incomplete migrations found. "
+                 "Please provide up and down migration files for "
+                 (str/join ", " (keys incomplete-files))))))
+
 (defn- get-migration-files [dir]
-  (->> (.listFiles (io/file dir))
-       (filter migration?)
-       (sort)
-       (group-by migration-id)))
+  (let [files (->> (.listFiles (io/file dir))
+                   (filter migration?)
+                   (sort)
+                   (group-by migration-id))]
+    (assert-migrations-complete files)
+    files))
 
 ;; Lexer borrowed from Clout
 
@@ -93,8 +103,6 @@
            (throw e)))))))
 
 (defn- make-migration [[id [down up]]]
-  (assert down (str "Down migration file missing for migration " id))
-  (assert up (str "Up migration file missing for migration " id))
   {:id   id
    :up   (run-sql-fn up)
    :down (run-sql-fn down)})

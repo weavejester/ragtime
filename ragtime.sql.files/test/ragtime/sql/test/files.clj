@@ -37,3 +37,8 @@
       (sql/with-connection test-db
         (is (table-exists? "ragtime_migrations"))
         (is (table-exists? "foo"))))))
+
+(deftest test-incomplete-migrations
+  (testing "incomplete migrations"
+    (is (thrown-with-msg? AssertionError #"Incomplete migrations"
+                          (migrations "test/incomplete-migrations")))))
