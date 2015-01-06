@@ -1,4 +1,5 @@
 (ns ragtime.sql.files
+  "Specify migrations as SQL files."
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [ragtime.sql.database]))
@@ -8,27 +9,20 @@
 (def ^:private migration-pattern
   #"(.*)\.(up|down)\.sql$")
 
-(defn- migration? [file]
-  (re-find migration-pattern (.getName (io/file file))))
+(defn- migration? [filename]
+  (re-find migration-pattern filename))
 
-(defn- migration-id [file]
-  (second (re-find migration-pattern (.getName (io/file file)))))
+(defn- migration-id [filename]
+  (second (re-find migration-pattern filename)))
 
 (defn- assert-migrations-complete [migration-files]
-  (let [incomplete-files (remove #(= (count (val %)) 2)
+  (let [incomplete-files (filter #(or (nil? (first (second %)))
+                                      (nil? (second (second %))))
                                  migration-files)]
-    (assert (empty? incomplete-files)            
+    (assert (empty? incomplete-files)
             (str "Incomplete migrations found. "
                  "Please provide up and down migration files for "
-                 (str/join ", " (keys incomplete-files))))))
-
-(defn- get-migration-files [dir]
-  (let [files (->> (.listFiles (io/file dir))
-                   (filter migration?)
-                   (sort)
-                   (group-by migration-id))]
-    (assert-migrations-complete files)
-    files))
+                 (str/join ", " (map first incomplete-files))))))
 
 ;; Lexer borrowed from Clout
 
@@ -107,12 +101,27 @@
    :up   (run-sql-fn up)
    :down (run-sql-fn down)})
 
+(defn files->migrations
+  "Transforms a list of migration files into a list of migrations. The 'files'
+  argument should be of the form: {id [down-file up-file] ...}, where 'id' is
+  the string name of the migration and '*-file' are file-like types suitable to
+  be passed to 'slurp'."
+  [files]
+  (assert-migrations-complete files)
+  (->> files
+       (map make-migration)
+       (sort-by :id)))
+
 (def ^:private default-dir "migrations")
 
 (defn migrations
   "Return a list of migrations to apply."
   ([] (migrations default-dir))
   ([dir]
-     (->> (get-migration-files dir)
-          (map make-migration)
-          (sort-by :id))))
+    (let [files (->> (.listFiles (io/file dir))
+                     (map #(do [(.getName %) %]))
+                     (filter #(migration? (first %)))
+                     (sort-by first)
+                     (group-by #(migration-id (first %))))]
+      (files->migrations
+        (for [[id fs] files] [id (map second fs)])))))
