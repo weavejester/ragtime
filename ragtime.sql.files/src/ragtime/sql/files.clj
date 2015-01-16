@@ -22,8 +22,15 @@
                  "Please provide up and down migration files for "
                  (str/join ", " (keys incomplete-files))))))
 
+(defn- warn-on-non-migration-files [files]
+  (if (System/getenv "DEBUG")
+    (do
+      (println "Warning! Found files that doesn't match the migration pattern: ")
+      (pprint (filter (not migration?) files)))))
+
 (defn- get-migration-files [dir]
   (let [files (->> (.listFiles (io/file dir))
+                   (warn-on-non-migration-files)
                    (filter migration?)
                    (sort)
                    (group-by migration-id))]
