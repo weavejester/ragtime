@@ -87,6 +87,7 @@
       (.printStackTrace next-e))))
 
 (defn- run-sql-fn [file]
+  (when (System/getenv "DEBUG") (println (str "Running migration file: " file)))
   (fn [db]
     (sql/with-connection db
       (sql/transaction
