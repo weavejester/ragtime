@@ -1,7 +1,6 @@
 (ns ragtime.sql.files
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]
-            [ragtime.sql.database]))
+            [clojure.string :as str]))
 
 (ragtime.sql.database/require-jdbc 'sql)
 
@@ -23,10 +22,11 @@
                  (str/join ", " (keys incomplete-files))))))
 
 (defn- warn-on-non-migration-files [files]
-  (if (System/getenv "DEBUG")
+  (when (System/getenv "DEBUG")
     (do
       (println "Warning! Found files that doesn't match the migration pattern: ")
-      (pprint (filter (not migration?) files)))))
+      (doall (map println (filter (not migration?) files)))))
+  files)
 
 (defn- get-migration-files [dir]
   (let [files (->> (.listFiles (io/file dir))
@@ -94,7 +94,7 @@
       (.printStackTrace next-e))))
 
 (defn- run-sql-fn [file]
-  (when (System/getenv "DEBUG") (println (str "Running migration file: " file)))
+  (when (System/getenv "DEBUG") (println (str "running migration file: " file)))
   (fn [db]
     (sql/with-connection db
       (sql/transaction
