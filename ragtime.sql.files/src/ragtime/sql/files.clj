@@ -22,10 +22,11 @@
                  (str/join ", " (keys incomplete-files))))))
 
 (defn- warn-on-non-migration-files [files]
-  (when (System/getenv "DEBUG")
-    (do
-      (println "Warning! Found files that doesn't match the migration pattern: ")
-      (doall (map println (filter (not migration?) files)))))
+  (let [unmatched (filter #(not (migration? %)) files)]
+    (when (and (System/getenv "DEBUG") (not (empty? unmatched)))
+      (do
+        (println "Warning! Found files that doesn't match the migration pattern (" migration-pattern "): ")
+        (doall (map println unmatched)))))
   files)
 
 (defn- get-migration-files [dir]
