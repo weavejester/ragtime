@@ -9,7 +9,8 @@
 (require-jdbc 'sql)
 
 (def test-db
-  (connection {:url "jdbc:h2:mem:test_db"}))
+  (connection {:database "jdbc:h2:mem:test_db"
+               :table "ragtime_migrations"}))
 
 (defn h2-fixture [f]
   (sql/with-connection test-db
