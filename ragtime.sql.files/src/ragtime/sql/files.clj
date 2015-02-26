@@ -4,6 +4,9 @@
 
 (ragtime.sql.database/require-jdbc 'sql)
 
+(defn- debug? 
+  (System/getenv "DEBUG"))
+
 (def ^:private migration-pattern
   #"(.*)\.(up|down)\.sql$")
 
@@ -23,7 +26,7 @@
 
 (defn- warn-on-non-migration-files [files]
   (let [unmatched (filter #(not (migration? %)) files)]
-    (when (and (System/getenv "DEBUG") (not (empty? unmatched)))
+    (when (and (debug?) (not (empty? unmatched)))
       (do
         (println "Warning! Found files that doesn't match the migration pattern (" migration-pattern "): ")
         (doall (map println unmatched)))))
@@ -95,7 +98,7 @@
       (.printStackTrace next-e))))
 
 (defn- run-sql-fn [file]
-  (when (System/getenv "DEBUG") (println (str "running migration file: " file)))
+  (when (debug?) (println (str "running migration file: " file)))
   (fn [db]
     (sql/with-connection db
       (sql/transaction
