@@ -31,14 +31,12 @@
     (is (= (migrations) [])))
   (testing "custom migration directory"
     (let [migs (migrations "test/migrations")]
-      (is (= (count migs) 2))
+      (is (= (count migs) 1))
       (is (= (:id (first migs)) "20111202110600-create-foo-table"))
-      (is (= (:id (nth migs 1)) "20111202110601_create_bar_table"))
       (migrate-all test-db migs)
       (sql/with-connection test-db
         (is (table-exists? "ragtime_migrations"))
-        (is (table-exists? "foo"))
-        (is (table-exists? "bar"))))))
+        (is (table-exists? "foo"))))))
 
 (deftest test-incomplete-migrations
   (testing "incomplete migrations"

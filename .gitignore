@@ -9,4 +9,3 @@ doc/
 .lein-failures
 .lein-deps-sum
 .lein-repl-history
-*.swp
