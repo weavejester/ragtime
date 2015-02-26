@@ -48,13 +48,6 @@ If you want to integrate Ragtime into Leiningen:
 * [Wiki](https://github.com/weavejester/ragtime/wiki)
 * [API docs](http://weavejester.github.com/ragtime)
 
-## TODO
-Would be good to have a migration generator that did something like this:
-```bash
-$ lein ragtime new
-```
-
-
 ## License
 
 Copyright © 2014 James Reeves
