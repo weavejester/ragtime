@@ -4,7 +4,7 @@
 
 Ragtime is a Clojure library for migrating structured data. It defines
 a common interface for expressing migrations, much like [Ring][1]
-defines a common interface for expression web applications.
+defines a common interface for expressing web applications.
 
 [1]: https://github.com/ring-clojure/ring
 
