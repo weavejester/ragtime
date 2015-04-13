@@ -4,7 +4,7 @@
   (:import java.net.URI))
 
 (defprotocol Migratable
-  "Protocol for a database that cab be migrated."
+  "Protocol for a database that can be migrated."
   (add-migration-id [db migration-id]
     "Add an applied migration ID to the database.")
   (remove-migration-id [db migration-id]
