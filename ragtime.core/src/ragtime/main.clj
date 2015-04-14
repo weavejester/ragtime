@@ -67,5 +67,5 @@ Options:
       "migrate"  (apply migrate options args)
       "rollback" (apply rollback options args)
       "help"     (println help-text)
-      :else      (do (println help-text)
-                     (System/exit 1)))))
+      (do (println help-text)
+          (System/exit 1)))))
