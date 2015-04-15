@@ -1,9 +1,11 @@
 (ns ragtime.sql.files
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]
-            [ragtime.sql.database]))
+            [clojure.string :as str]))
 
 (ragtime.sql.database/require-jdbc 'sql)
+
+(defn- debug? 
+  (System/getenv "DEBUG"))
 
 (def ^:private migration-pattern
   #"(.*)\.(up|down)\.sql$")
@@ -22,8 +24,17 @@
                  "Please provide up and down migration files for "
                  (str/join ", " (keys incomplete-files))))))
 
+(defn- warn-on-non-migration-files [files]
+  (let [unmatched (filter #(not (migration? %)) files)]
+    (when (and (debug?) (not (empty? unmatched)))
+      (do
+        (println "Warning! Found files that doesn't match the migration pattern (" migration-pattern "): ")
+        (doall (map println unmatched)))))
+  files)
+
 (defn- get-migration-files [dir]
   (let [files (->> (.listFiles (io/file dir))
+                   (warn-on-non-migration-files)
                    (filter migration?)
                    (sort)
                    (group-by migration-id))]
@@ -87,6 +98,7 @@
       (.printStackTrace next-e))))
 
 (defn- run-sql-fn [file]
+  (when (debug?) (println (str "running migration file: " file)))
   (fn [db]
     (sql/with-connection db
       (sql/transaction
