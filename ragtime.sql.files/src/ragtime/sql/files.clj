@@ -107,11 +107,17 @@
    :up   (run-sql-fn up)
    :down (run-sql-fn down)})
 
-(def ^:private default-dir "migrations")
+(def ^:private migrations-dir
+  (let
+      [proj (read-string (slurp "project.clj"))
+       ragtime-opts (nth proj (inc (.indexOf proj :ragtime)))]
+    (if-let [migrations-dir (:migrations-dir ragtime-opts)]
+      migrations-dir
+      "migrations")))
 
 (defn migrations
   "Return a list of migrations to apply."
-  ([] (migrations default-dir))
+  ([] (migrations migrations-dir))
   ([dir]
      (->> (get-migration-files dir)
           (map make-migration)
