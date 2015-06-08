@@ -27,16 +27,34 @@
   (map verbose-migration ((load-var migration-fn))))
 
 (defn migrate [{:keys [database migrations]}]
-  (core/migrate-all
-   (core/connection database)
-   (resolve-migrations migrations)))
+  (letfn [(migrate_db [the_db]
+                      (core/migrate-all
+                        (core/connection the_db)
+                        (resolve-migrations migrations))
+                      )
+          ]
+    (if (coll? database)
+      (doseq [db database]
+        (migrate_db db)
+        )
+      (migrate_db database)
+      )))
 
 (defn rollback [{:keys [database migrations]} & [n]]
-  (let [db (core/connection database)]
-    (doseq [m (resolve-migrations migrations)]
-      (core/remember-migration m))
-    (core/rollback-last db (or (when n (Integer/parseInt n)) 
-                               1))))
+  (letfn [(rollback_db [the_db]
+                       (let [db (core/connection the_db)]
+                         (doseq [m (resolve-migrations migrations)]
+                           (core/remember-migration m))
+                         (core/rollback-last db (or (when n (Integer/parseInt n))
+                                                    1)))
+                       )
+          ]
+    (if (coll? database)
+      (doseq [db database]
+        (rollback_db db)
+        )
+      (rollback_db database)
+      )))
 
 (defn- parse-args [args]
   (cli args
