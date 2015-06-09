@@ -1,7 +1,6 @@
 (ns ragtime.core
   "Functions and macros for defining and applying migrations."
-  (:require [ragtime.strategy :as strategy])
-  (:import java.net.URI))
+  (:require [ragtime.strategy :as strategy]))
 
 (defprotocol Migratable
   "Protocol for a database that can be migrated."
@@ -11,12 +10,6 @@
     "Remove a rolled-back migration ID from the database.")
   (applied-migration-ids [db]
     "Return a list of the ids of all migrations applied to the database."))
-
-(defmulti connection
-  "Create a Migratable database connection from a URL. Dispatches on the URL
-  scheme."
-  (fn [url]
-    (.getScheme (URI. url))))
 
 (defonce known-migrations (atom {}))
 
