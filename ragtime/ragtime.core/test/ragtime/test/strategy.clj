@@ -1,6 +1,6 @@
 (ns ragtime.test.strategy
-  (:use clojure.test
-        ragtime.strategy))
+  (:require [clojure.test :refer :all]
+            [ragtime.strategy :refer :all]))
 
 (deftest apply-new-test
   (are [a m r] (= (apply-new a m) r)

@@ -1,7 +1,7 @@
 (ns ragtime.test.core
-  (:use clojure.test
-        ragtime.core)
-  (:require [ragtime.strategy :as strategy]))
+  (:require [clojure.test :refer :all]
+            [ragtime.core :refer :all]
+            [ragtime.strategy :as strategy]))
 
 (defrecord InMemoryDB [data]
   Migratable
