@@ -1,30 +1,22 @@
 (ns ragtime.sql.database
   (:require [ragtime.core :as ragtime]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.java.jdbc :as sql])
   (:import java.io.FileNotFoundException
            java.util.Date
            java.text.SimpleDateFormat))
 
-(defn require-jdbc [ns-alias]
-  (try
-    (require 'clojure.java.jdbc.deprecated)
-    (alias ns-alias 'clojure.java.jdbc.deprecated)
-    (catch FileNotFoundException ex
-      (require 'clojure.java.jdbc)
-      (alias ns-alias 'clojure.java.jdbc))))
-
-(require-jdbc 'sql)
-
 (def ^:private migrations-table "ragtime_migrations")
 
-(defn ^:internal ensure-migrations-table-exists [db]
-  ;; TODO: is there a portable way to detect table existence?
-  (sql/with-connection db
-    (try
-      (sql/create-table migrations-table
+(def ^:private migrations-table-ddl
+  (sql/create-table-ddl migrations-table
                         [:id "varchar(255)"]
-                        [:created_at "varchar(32)"])
-      (catch Exception _))))
+                        [:created_at "varchar(32)"]))
+
+(defn ensure-migrations-table-exists [db]
+  (try
+    (sql/execute! db migrations-table-ddl)
+    (catch Exception _)))
 
 (defn format-datetime [dt]
   (-> (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS")
@@ -33,23 +25,20 @@
 (defrecord SqlDatabase []
   ragtime/Migratable
   (add-migration-id [db id]
-    (sql/with-connection db
-      (ensure-migrations-table-exists db)
-      (sql/insert-values migrations-table
-                         [:id :created_at]
-                         [(str id) (format-datetime (Date.))])))
+    (ensure-migrations-table-exists db)
+    (sql/insert! db migrations-table
+                 {:id :created_at
+                  (str id) (format-datetime (Date.))}))
   
   (remove-migration-id [db id]
-    (sql/with-connection db
-      (ensure-migrations-table-exists db)
-      (sql/delete-rows migrations-table ["id = ?" id])))
+    (ensure-migrations-table-exists db)
+    (sql/delete! db migrations-table ["id = ?" id]))
 
   (applied-migration-ids [db]
-    (sql/with-connection db
-      (ensure-migrations-table-exists db)
-      (sql/with-query-results results
-        ["SELECT id FROM ragtime_migrations ORDER BY created_at"]
-        (vec (map :id results))))))
+    (ensure-migrations-table-exists db)
+    (sql/query db
+      ["SELECT id FROM ragtime_migrations ORDER BY created_at"]
+      :row-fn :id)))
 
 (defmethod ragtime/connection "jdbc" [url]
   (map->SqlDatabase {:connection-uri url}))

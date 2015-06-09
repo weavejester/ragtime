@@ -3,16 +3,8 @@
             [ragtime.sql.database :refer :all]
             [ragtime.core :as ragtime]))
 
-(require-jdbc 'sql)
-
 (def test-db
   (ragtime/connection "jdbc:h2:mem:test_db"))
-
-(defn h2-fixture [f]
-  (sql/with-connection test-db
-    (f)))
-
-(use-fixtures :each h2-fixture)
 
 (deftest test-add-migrations
   (ragtime/add-migration-id test-db "12")
