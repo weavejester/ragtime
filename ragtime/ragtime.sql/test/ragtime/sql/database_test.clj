@@ -1,4 +1,4 @@
-(ns ragtime.sql.test.database
+(ns ragtime.sql.database-test
   (:require [clojure.test :refer :all]
             [ragtime.sql.database :refer :all]
             [ragtime.core :as ragtime]))
