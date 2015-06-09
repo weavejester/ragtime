@@ -1,6 +1,6 @@
 (ns ragtime.sql.database
-  (:use [ragtime.core :only (Migratable connection)])
-  (:require [clojure.java.io :as io])
+  (:require [ragtime.core :as ragtime]
+            [clojure.java.io :as io])
   (:import java.io.FileNotFoundException
            java.util.Date
            java.text.SimpleDateFormat))
@@ -31,7 +31,7 @@
       (.format dt)))
 
 (defrecord SqlDatabase []
-  Migratable
+  ragtime/Migratable
   (add-migration-id [db id]
     (sql/with-connection db
       (ensure-migrations-table-exists db)
@@ -51,5 +51,5 @@
         ["SELECT id FROM ragtime_migrations ORDER BY created_at"]
         (vec (map :id results))))))
 
-(defmethod connection "jdbc" [url]
+(defmethod ragtime/connection "jdbc" [url]
   (map->SqlDatabase {:connection-uri url}))
