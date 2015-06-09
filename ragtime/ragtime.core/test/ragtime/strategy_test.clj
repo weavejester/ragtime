@@ -1,4 +1,4 @@
-(ns ragtime.test.strategy
+(ns ragtime.strategy-test
   (:require [clojure.test :refer :all]
             [ragtime.strategy :refer :all]))
 
