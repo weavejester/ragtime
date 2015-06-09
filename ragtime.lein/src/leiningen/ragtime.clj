@@ -13,9 +13,10 @@
   (let [migrations (-> project :ragtime :migrations str)
         database   (-> project :ragtime :database)
         project    (add-ragtime-deps project)]
-    (apply run project
-           "-m" "ragtime.main"
-           "-r" "ragtime.sql.database"
-           "-d" database
-           "-m" migrations
-           command args)))
+    (when-let [db (if (coll? database) database [database])]
+      (apply run project
+             "-m" "ragtime.main"
+             "-r" "ragtime.sql.database"
+             "-d" db
+             "-m" migrations
+             command args))))
