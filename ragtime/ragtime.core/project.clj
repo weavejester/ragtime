@@ -1,4 +1,4 @@
-(defproject ragtime/ragtime.core "0.3.9"
+(defproject ragtime/ragtime.core "0.4.0-SNAPSHOT"
   :description "A database-independent migration library"
   :url "https://github.com/weavejester/ragtime"
   :license {:name "Eclipse Public License"
