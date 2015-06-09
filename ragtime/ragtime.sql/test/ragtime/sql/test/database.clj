@@ -4,7 +4,7 @@
             [ragtime.core :as ragtime]))
 
 (def test-db
-  (ragtime/connection "jdbc:h2:mem:test_db"))
+  (sql-database {:connection-uri "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"}))
 
 (deftest test-add-migrations
   (ragtime/add-migration-id test-db "12")
