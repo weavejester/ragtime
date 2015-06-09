@@ -18,18 +18,18 @@
   (fn [url]
     (.getScheme (URI. url))))
 
-(defonce defined-migrations (atom {}))
+(defonce known-migrations (atom {}))
 
 (defn remember-migration
   "Remember a migration so that it can be found from its ID."
   [migration]
-  (swap! defined-migrations assoc (:id migration) migration))
+  (swap! known-migrations assoc (:id migration) migration))
 
 (defn applied-migrations
   "List all migrations applied to the database."
   [db]
   (remove nil? (->> (applied-migration-ids db)
-                    (map @defined-migrations))))
+                    (map @known-migrations))))
 
 (defn migrate
   "Apply a single migration to a database."

@@ -57,7 +57,7 @@
     ; add the migration id to the database to simulate that it has been applied
     (add-migration-id database id)
     ; but remove it from the remembered migrations.
-    (swap! defined-migrations dissoc id)
+    (swap! known-migrations dissoc id)
     (migrate-all database [assoc-y] strategy/apply-new)
     (is (nil? (:y @(:data database))))))
 
