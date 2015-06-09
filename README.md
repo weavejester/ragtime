@@ -50,6 +50,6 @@ If you want to integrate Ragtime into Leiningen:
 
 ## License
 
-Copyright © 2014 James Reeves
+Copyright © 2015 James Reeves
 
 Distributed under the Eclipse Public License, the same as Clojure.
