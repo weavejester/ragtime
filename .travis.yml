@@ -1,4 +1,5 @@
 language: clojure
+before_install: cd ragtime
 lein: lein2
 script: lein2 sub test
 jdk:
