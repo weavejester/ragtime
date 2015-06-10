@@ -43,3 +43,12 @@
    (sql-database db-spec {}))
   ([db-spec {:keys [migrations-table] :or {migrations-table "ragtime_migrations"}}]
    (->SqlDatabase db-spec migrations-table)))
+
+(defn- execute-sql! [db-spec statements]
+  (doseq [s statements]
+    (sql/execute! db-spec [s])))
+
+(defn sql-migration [{:keys [id up down]}]
+  {:id   id
+   :up   #(execute-sql! (:db-spec %) up)
+   :down #(execute-sql! (:db-spec %) down)})
