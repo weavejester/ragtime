@@ -1,5 +1,8 @@
 (defproject ragtime "0.4.0-SNAPSHOT"
   :description "A database-independent migration library"
+  :url "https://github.com/weavejester/ragtime"
+  :license {:name "Eclipse Public License"
+            :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[ragtime/ragtime.core "0.4.0-SNAPSHOT"]
                  [ragtime/ragtime.jdbc "0.4.0-SNAPSHOT"]]
   :plugins [[lein-sub "0.2.1"]
