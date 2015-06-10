@@ -1,4 +1,4 @@
-(ns ragtime.sql.database
+(ns ragtime.jdbc
   (:require [ragtime.core :as ragtime]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql])

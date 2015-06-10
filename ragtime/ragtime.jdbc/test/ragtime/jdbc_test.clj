@@ -1,6 +1,6 @@
-(ns ragtime.sql.database-test
+(ns ragtime.jdbc-test
   (:require [clojure.test :refer :all]
-            [ragtime.sql.database :refer :all]
+            [ragtime.jdbc :refer :all]
             [ragtime.core :as ragtime]))
 
 (def test-db

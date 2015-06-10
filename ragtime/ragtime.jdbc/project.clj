@@ -1,5 +1,5 @@
-(defproject ragtime/ragtime.sql "0.4.0-SNAPSHOT"
-  :description "Ragtime migrations for SQL databases"
+(defproject ragtime/ragtime.jdbc "0.4.0-SNAPSHOT"
+  :description "Ragtime migrations for JDBC"
   :url "https://github.com/weavejester/ragtime"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
