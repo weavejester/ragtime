@@ -28,14 +28,14 @@
 
 (defn migrate [{:keys [database migrations]}]
   (core/migrate-all
-   (core/connection database)
-   (resolve-migrations migrations)))
+    (core/connection database)
+    (resolve-migrations migrations)))
 
 (defn rollback [{:keys [database migrations]} & [n]]
   (let [db (core/connection database)]
     (doseq [m (resolve-migrations migrations)]
       (core/remember-migration m))
-    (core/rollback-last db (or (when n (Integer/parseInt n)) 
+    (core/rollback-last db (or (when n (Integer/parseInt n))
                                1))))
 
 (defn- parse-args [args]
