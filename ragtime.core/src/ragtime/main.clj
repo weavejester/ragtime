@@ -13,18 +13,8 @@
   (->> (str/split namespaces #"\s*,\s*")
        (map symbol)))
 
-(defn- wrap-println [f s]
-  (fn [& args]
-    (println s)
-    (apply f args)))
-
-(defn- verbose-migration [{:keys [id up down] :as migration}]
-  (assoc migration
-    :up   (wrap-println up   (str "Applying " id))
-    :down (wrap-println down (str "Rolling back " id))))
-
 (defn- resolve-migrations [migration-fn]
-  (map verbose-migration ((load-var migration-fn))))
+  (map core/verbose-migration ((load-var migration-fn))))
 
 (defn migrate [{:keys [database migrations]}]
   (core/migrate-all
@@ -35,7 +25,7 @@
   (let [db (core/connection database)]
     (doseq [m (resolve-migrations migrations)]
       (core/remember-migration m))
-    (core/rollback-last db (or (when n (Integer/parseInt n)) 
+    (core/rollback-last db (or (when n (Integer/parseInt n))
                                1))))
 
 (defn- parse-args [args]

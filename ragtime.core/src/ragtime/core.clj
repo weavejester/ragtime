@@ -82,3 +82,15 @@
       (throw (Exception. (str "Could not find migration '" migration-id "'")))
       (doseq [migration discards]
         (rollback db migration)))))
+
+(defn- wrap-println [f s]
+  (fn [& args]
+    (println s)
+    (apply f args)))
+
+(defn verbose-migration
+  "Wraps a migration such that status messages are printed to stdout."
+  [{:keys [id up down] :as migration}]
+  (assoc migration
+    :up   (wrap-println up   (str "Applying " id))
+    :down (wrap-println down (str "Rolling back " id))))
