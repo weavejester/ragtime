@@ -5,8 +5,8 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[ragtime/ragtime.core "0.4.0-SNAPSHOT"]
                  [ragtime/ragtime.jdbc "0.4.0-SNAPSHOT"]]
-  :plugins [[lein-sub "0.2.1"]
-            [codox "0.8.10"]]
+  :plugins [[lein-sub "0.3.0"]
+            [codox "0.8.11"]]
   :sub ["ragtime.core" "ragtime.jdbc"]
   :codox {:sources ["ragtime.core/src"
                     "ragtime.jdbc/src"]})
