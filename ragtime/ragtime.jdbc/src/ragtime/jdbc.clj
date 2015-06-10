@@ -2,9 +2,9 @@
   (:require [ragtime.core :as ragtime]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql])
-  (:import java.util.Date
-           java.sql.SQLException
-           java.text.SimpleDateFormat))
+  (:import [java.util Date]
+           [java.sql SQLException]
+           [java.text SimpleDateFormat]))
 
 (defn- migrations-table-ddl [table-name]
   (sql/create-table-ddl table-name
@@ -16,7 +16,7 @@
     (sql/execute! db-spec [(migrations-table-ddl migrations-table)])
     (catch SQLException _)))
 
-(defn format-datetime [dt]
+(defn- format-datetime [dt]
   (-> (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS")
       (.format dt)))
 
