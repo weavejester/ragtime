@@ -1,5 +1,7 @@
 (ns ragtime.jdbc
+  (:refer-clojure :exclude [load-file])
   (:require [ragtime.core :as ragtime]
+            [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql])
   (:import [java.util Date]
@@ -52,3 +54,16 @@
   {:id   id
    :up   #(execute-sql! (:db-spec %) up)
    :down #(execute-sql! (:db-spec %) down)})
+
+(defn- edn-extention? [file]
+  (.endsWith (str file) ".edn"))
+
+(defn load-file [file]
+  (sql-migration (edn/read-string (slurp file))))
+
+(defn load-directory [path]
+  (->> (io/file path)
+       (file-seq)
+       (filter edn-extention?)
+       (sort)
+       (map load-file)))
