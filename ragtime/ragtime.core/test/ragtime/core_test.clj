@@ -85,3 +85,13 @@
     (is (= (:x @(:data database)) 1))
     (is (not (contains? @(:data database) :y)))
     (is (not (contains? @(:data database) :z)))))
+
+(deftest test-remember-migration
+  (let [assoc-x (assoc-migration "assoc-x" :x 1)
+        assoc-y (assoc-migration "assoc-y" :y 2)
+        assoc-z (assoc-migration "assoc-z" :z 3)]
+    (remember-migration assoc-x assoc-y assoc-z)
+    (is (= @known-migrations
+           {"assoc-x" assoc-x
+            "assoc-y" assoc-y
+            "assoc-z" assoc-z}))))

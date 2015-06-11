@@ -15,8 +15,12 @@
 
 (defn remember-migration
   "Remember a migration so that it can be found from its ID."
-  [migration]
-  (swap! known-migrations assoc (:id migration) migration))
+  ([migration]
+   (swap! known-migrations assoc (:id migration) migration))
+  ([migration & migrations]
+   (remember-migration migration)
+   (doseq [m migrations]
+     (remember-migration m))))
 
 (defn applied-migrations
   "List all migrations applied to the database."

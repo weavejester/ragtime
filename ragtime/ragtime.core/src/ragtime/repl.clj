@@ -22,8 +22,7 @@
   []
   (let [load-migrations (:loader config)]
     (alter-var-root #'migrations (fn [_] (load-migrations)))
-    (doseq [migration migrations]
-      (core/remember-migration migration))))
+    (apply core/remember-migration migrations)))
 
 (defn migrate
   "Migrate the database up to the latest migration."
