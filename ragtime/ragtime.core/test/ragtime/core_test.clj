@@ -15,7 +15,7 @@
 (defn in-memory-db []
   (InMemoryDB. (atom {:migrations #{}})))
 
-(defn- assoc-migration [id key val]
+(defn assoc-migration [id key val]
   {:id id
    :up   (fn [db] (swap! (:data db) assoc key val))
    :down (fn [db] (swap! (:data db) dissoc key))})
