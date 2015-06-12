@@ -4,14 +4,14 @@
             [ragtime.repl :as repl]
             [ragtime.core :as core]))
 
-(defn loader []
+(def migrations
   [(assoc-migration "a" :a 1)
    (assoc-migration "b" :b 2)
    (assoc-migration "c" :c 3)])
 
 (def database (in-memory-db))
 
-(repl/set-config! {:loader loader, :database database})
+(repl/set-config! {:database database :migrations (constantly migrations)})
 
 (deftest test-repl-functions
   (is (= @(:data database) {:migrations #{}}))

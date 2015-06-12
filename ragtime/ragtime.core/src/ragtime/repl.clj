@@ -8,9 +8,9 @@
 (defn set-config!
   "Set the REPL configuration. Expects a map with the following keys:
   
-    :loader   - a zero argument function that returns a list of migrations
-    :database - a Migratable database (e.g. ragtime.jdbc/sql-database)
-    :strategy - the migration strategy (defaults to ragtime.strategy/raise-error)"
+    :database   - a Migratable database (e.g. ragtime.jdbc/sql-database)
+    :migrations - a zero argument function that returns a list of migrations
+    :strategy   - the migration strategy (defaults to ragtime.strategy/raise-error)"
   [new-config]
   (alter-var-root #'config (constantly new-config)))
 
@@ -20,7 +20,7 @@
   "Reload migrations using the :loader option in the configuration. This is
   called automatically by migrate and rollback."
   []
-  (let [load-migrations (:loader config)]
+  (let [load-migrations (:migrations config)]
     (alter-var-root #'migrations (fn [_] (load-migrations)))
     (apply core/remember-migration migrations)))
 
