@@ -27,13 +27,20 @@
   (map verbose-migration ((load-var migration-fn))))
 
 (defn migrate [{:keys [database migrations]}]
-  (core/migrate-all
-   (core/connection database)
-   (resolve-migrations migrations)))
+
+  ;; We want to resolve migrations fn before calling core/connection
+  (let [migrations-col (resolve-migrations migrations)]
+    (core/migrate-all
+     (core/connection database)
+     migrations-col)))
 
 (defn rollback [{:keys [database migrations]} & [n]]
-  (let [db (core/connection database)]
-    (doseq [m (resolve-migrations migrations)]
+
+  ;; We want to resolve migrations fn before calling core/connection
+  (let [migrations-col (resolve-migrations migrations)
+        db (core/connection database)]
+
+    (doseq [m migrations-col]
       (core/remember-migration m))
     (core/rollback-last db (or (when n (Integer/parseInt n)) 
                                1))))
