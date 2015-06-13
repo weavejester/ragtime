@@ -16,31 +16,40 @@
   (InMemoryDB. (atom {:migrations #{}})))
 
 (defn assoc-migration [id key val]
-  {:id id
+  {:id   id
    :up   (fn [db] (swap! (:data db) assoc key val))
    :down (fn [db] (swap! (:data db) dissoc key))})
 
+(deftest test-into-index
+  (let [assoc-x (assoc-migration "assoc-x" :x 1)
+        assoc-y (assoc-migration "assoc-y" :y 2)
+        index   (into-index [assoc-x])]
+    (is (= (index "assoc-x") assoc-x))
+    (is (= ((into-index index [assoc-y]) "assoc-y") assoc-y))))
+
 (deftest test-migrate-and-rollback
   (let [database  (in-memory-db)
-        migration (assoc-migration "m" :x 1)]
+        migration (assoc-migration "m" :x 1)
+        index     (into-index [migration])]
     (testing "migrate"
       (migrate database migration)
       (is (= (:x @(:data database)) 1))
-      (is (contains? (set (applied-migrations database)) migration)))
+      (is (contains? (set (applied-migrations database index)) migration)))
     (testing "rollback"
       (rollback database migration)
       (is (nil? (:x @(:data database))))
-      (is (not (contains? (set (applied-migrations database)) migration))))))
+      (is (not (contains? (set (applied-migrations database index)) migration))))))
 
 (deftest test-migrate-all
   (let [database (in-memory-db)
         assoc-x  (assoc-migration "assoc-x" :x 1)
         assoc-y  (assoc-migration "assoc-y" :y 2)
-        assoc-z  (assoc-migration "assoc-z" :z 3)]
-    (migrate-all database [assoc-x assoc-y])
+        assoc-z  (assoc-migration "assoc-z" :z 3)
+        index    (into-index [assoc-x assoc-y assoc-z])]
+    (migrate-all database index [assoc-x assoc-y])
     (is (= (:x @(:data database)) 1))
     (is (= (:y @(:data database)) 2))
-    (migrate-all database [assoc-x assoc-z] strategy/rebase)
+    (migrate-all database index [assoc-x assoc-z] strategy/rebase)
     (is (= (:x @(:data database)) 1))
     (is (nil? (:y @(:data database))))
     (is (= (:z @(:data database)) 3))))
@@ -52,46 +61,34 @@
   Migratable should not be applied again, even if they have not yet been
   remembered by the application."
   (let [database (in-memory-db)
-        assoc-y  (assoc-migration "assoc-y" :y 2)
-        id       (:id assoc-y)]
-    ; add the migration id to the database to simulate that it has been applied
-    (add-migration-id database id)
-    ; but remove it from the remembered migrations.
-    (swap! known-migrations dissoc id)
-    (migrate-all database [assoc-y] strategy/apply-new)
+        assoc-y  (assoc-migration "assoc-y" :y 2)]
+    (add-migration-id database (:id assoc-y))
+    (migrate-all database {} [assoc-y] strategy/apply-new)
     (is (nil? (:y @(:data database))))))
 
 (deftest test-rollback-last
-  (let [database (in-memory-db)
-        assoc-x  (assoc-migration "assoc-x" :x 1)
-        assoc-y  (assoc-migration "assoc-y" :y 2)
-        assoc-z  (assoc-migration "assoc-z" :z 3)]
-    (migrate-all database [assoc-x assoc-y assoc-z])
-    (rollback-last database)
+  (let [database   (in-memory-db)
+        assoc-x    (assoc-migration "assoc-x" :x 1)
+        assoc-y    (assoc-migration "assoc-y" :y 2)
+        assoc-z    (assoc-migration "assoc-z" :z 3)
+        migrations [assoc-x assoc-y assoc-z]]
+    (migrate-all database {} migrations)
+    (rollback-last database (into-index migrations))
     (is (= (:x @(:data database)) 1))
     (is (= (:y @(:data database)) 2))
     (is (not (contains? @(:data database) :z)))
-    (rollback-last database 2)
+    (rollback-last database (into-index migrations) 2)
     (is (not (contains? @(:data database) :y)))
     (is (not (contains? @(:data database) :z)))))
 
 (deftest test-rollback-to
-  (let [database (in-memory-db)
-        assoc-x  (assoc-migration "assoc-x" :x 1)
-        assoc-y  (assoc-migration "assoc-y" :y 2)
-        assoc-z  (assoc-migration "assoc-z" :z 3)]
-    (migrate-all database [assoc-x assoc-y assoc-z])
-    (rollback-to database "assoc-x")
+  (let [database   (in-memory-db)
+        assoc-x    (assoc-migration "assoc-x" :x 1)
+        assoc-y    (assoc-migration "assoc-y" :y 2)
+        assoc-z    (assoc-migration "assoc-z" :z 3)
+        migrations [assoc-x assoc-y assoc-z]]
+    (migrate-all database {} migrations)
+    (rollback-to database (into-index migrations) "assoc-x")
     (is (= (:x @(:data database)) 1))
     (is (not (contains? @(:data database) :y)))
     (is (not (contains? @(:data database) :z)))))
-
-(deftest test-remember-migration
-  (let [assoc-x (assoc-migration "assoc-x" :x 1)
-        assoc-y (assoc-migration "assoc-y" :y 2)
-        assoc-z (assoc-migration "assoc-z" :z 3)]
-    (remember-migration assoc-x assoc-y assoc-z)
-    (is (= @known-migrations
-           {"assoc-x" assoc-x
-            "assoc-y" assoc-y
-            "assoc-z" assoc-z}))))

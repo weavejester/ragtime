@@ -11,27 +11,23 @@
   (applied-migration-ids [db]
     "Return a list of the ids of all migrations applied to the database."))
 
-(defonce known-migrations (atom {}))
-
-(defn remember-migration
-  "Remember a migration so that it can be found from its ID."
-  ([migration]
-   (swap! known-migrations assoc (:id migration) migration))
-  ([migration & migrations]
-   (remember-migration migration)
-   (doseq [m migrations]
-     (remember-migration m))))
+(defn into-index
+  "Add migrations to a map, using their :id as the key."
+  ([migrations]
+   (into-index {} migrations))
+  ([index migrations]
+   (into index (map (juxt :id identity) migrations))))
 
 (defn applied-migrations
-  "List all migrations applied to the database."
-  [db]
-  (remove nil? (->> (applied-migration-ids db)
-                    (map @known-migrations))))
+  "List all migrations in the index that are applied to the database."
+  [db index]
+  (->> (applied-migration-ids db)
+       (map index)
+       (remove nil?)))
 
 (defn migrate
   "Apply a single migration to a database."
   [db migration]
-  (remember-migration migration)
   ((:up migration) db)
   (add-migration-id db (:id migration)))
 
@@ -42,40 +38,38 @@
   (remove-migration-id db (:id migration)))
 
 (defn migrate-all
-  "Migrate all migrations using the supplied strategy. The strategy defines
-  what to do if there are conflicts between the migrations applied to the
-  database, and the migrations that need to be applied. The default
-  strategy is ragtime.strategy/raise-error."
-  ([db migrations]
-     (migrate-all db migrations strategy/raise-error))
-  ([db migrations strategy]
-     (doseq [migration migrations]
-       (remember-migration migration))
-     (let [applied  (applied-migrations db)]
-       (doseq [[action migration] (strategy applied migrations)]
-         (case action
-           :migrate  (migrate db migration)
-           :rollback (rollback db migration))))))
+  "Migrate a database with the supplied index, migrations and
+  strategy. The index matches IDs in the database with their
+  associated migrations. The strategy defines what to do if there are
+  conflicts between the migrations applied to the database, and the
+  migrations that need to be applied. The default strategy is
+  ragtime.strategy/raise-error. "
+  ([db index migrations]
+     (migrate-all db index migrations strategy/raise-error))
+  ([db index migrations strategy]
+   (let [applied (applied-migrations db (into-index index migrations))]
+     (doseq [[action migration] (strategy applied migrations)]
+       (case action
+         :migrate  (migrate db migration)
+         :rollback (rollback db migration))))))
 
 (defn rollback-last
-  "Rollback the last n previous migrations from the database. If n is not
-  specified, only the very last migration is rolled back."
-  ([db]
-     (rollback-last db 1))
-  ([db n]
-     (doseq [migration (take n (reverse (applied-migrations db)))]
+  "Rollback the last n migrations from the database, using the supplied
+  migration index. If n is not specified, only the very last migration is
+  rolled back."
+  ([db index]
+     (rollback-last db index 1))
+  ([db index n]
+     (doseq [migration (take n (reverse (applied-migrations db index)))]
        (rollback db migration))))
 
 (defn rollback-to
-  "Rollback to a specific migration or migration ID."
-  [db migration]
-  (let [migrations   (applied-migrations db)
-        migration-id (if (map? migration)
-                       (:id migration)
-                       migration)
-        discards     (->> (reverse migrations)
-                          (take-while #(not= (:id %) migration-id)))]
+  "Rollback to a specific migration ID, using the supplied migration index."
+  [db index id]
+  (let [migrations (applied-migrations db index)
+        discards   (->> (reverse migrations)
+                        (take-while #(not= (:id %) id)))]
     (if (= discards migrations)
-      (throw (Exception. (str "Could not find migration '" migration-id "'")))
+      (throw (Exception. (str "Could not find migration '" id "' in database")))
       (doseq [migration discards]
         (rollback db migration)))))
