@@ -33,14 +33,6 @@
     (ragtime/rollback db m)
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))))
 
-(deftest test-load-file
-  (let [db (jdbc/sql-database {:connection-uri "jdbc:h2:mem:test4;DB_CLOSE_DELAY=-1"})
-        m  (jdbc/load-file "test/migrations/001-test.edn")]
-    (ragtime/migrate db m)
-    (is (= #{"RAGTIME_MIGRATIONS" "TESTING"} (table-names db)))
-    (ragtime/rollback db m)
-    (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))))
-
 (deftest test-load-directory
   (let [db (jdbc/sql-database {:connection-uri "jdbc:h2:mem:test4;DB_CLOSE_DELAY=-1"})
         ms (jdbc/load-directory "test/migrations")]

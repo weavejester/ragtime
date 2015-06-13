@@ -64,20 +64,25 @@
    :up   #(execute-sql! (:db-spec %) up)
    :down #(execute-sql! (:db-spec %) down)})
 
-(defn- edn-extention? [file]
-  (.endsWith (str file) ".edn"))
+(defn- file-extension [file]
+  (re-find #"\.[^.]*$" (str file)))
 
-(defn load-file
-  "Load a Ragtime migration from a file."
-  [file]
-  (sql-migration (edn/read-string (slurp file))))
+(defmulti load-files
+  "Given an collection of files with the same extension, return a ordered
+  collection of migrations."
+  (fn [files] (file-extension (first files))))
+
+(defmethod load-files :default [files])
+
+(defmethod load-files ".edn" [files]
+  (for [file (sort files)]
+    (sql-migration (edn/read-string (slurp file)))))
 
 (defn load-directory
-  "Load a collection of Ragtime migrations from a directory, in alphanumeric
-  order."
+  "Load a collection of Ragtime migrations from a directory."
   [path]
   (->> (io/file path)
        (file-seq)
-       (filter edn-extention?)
-       (sort)
-       (map load-file)))
+       (group-by file-extension)
+       (vals)
+       (mapcat load-files)))
