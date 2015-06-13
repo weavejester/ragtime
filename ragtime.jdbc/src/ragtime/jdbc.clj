@@ -1,4 +1,5 @@
 (ns ragtime.jdbc
+  "Functions for loading SQL migrations and applying them to a SQL database."
   (:refer-clojure :exclude [load-file])
   (:require [ragtime.core :as ragtime]
             [clojure.edn :as edn]
@@ -41,16 +42,24 @@
                :row-fn :id)))
 
 (defn sql-database
+  "Given a db-spec and a map of options, return a Migratable database.
+  The following options are allowed:
+
+  :migrations-table - the name of the table to store the applied migrations
+                      (defaults to ragtime_migrations)"
   ([db-spec]
    (sql-database db-spec {}))
-  ([db-spec {:keys [migrations-table] :or {migrations-table "ragtime_migrations"}}]
-   (->SqlDatabase db-spec migrations-table)))
+  ([db-spec options]
+   (->SqlDatabase db-spec (:migrations-table options "ragtime_migrations"))))
 
 (defn- execute-sql! [db-spec statements]
   (doseq [s statements]
     (sql/execute! db-spec [s])))
 
-(defn sql-migration [{:keys [id up down]}]
+(defn sql-migration
+  "Create a Ragtime migration from a map with a unique :id, and :up and :down
+  keys that map to ordered collection of SQL strings."
+  [{:keys [id up down]}]
   {:id   id
    :up   #(execute-sql! (:db-spec %) up)
    :down #(execute-sql! (:db-spec %) down)})
@@ -58,10 +67,15 @@
 (defn- edn-extention? [file]
   (.endsWith (str file) ".edn"))
 
-(defn load-file [file]
+(defn load-file
+  "Load a Ragtime migration from a file."
+  [file]
   (sql-migration (edn/read-string (slurp file))))
 
-(defn load-directory [path]
+(defn load-directory
+  "Load a collection of Ragtime migrations from a directory, in alphanumeric
+  order."
+  [path]
   (->> (io/file path)
        (file-seq)
        (filter edn-extention?)
