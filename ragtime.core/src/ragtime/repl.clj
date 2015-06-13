@@ -7,13 +7,13 @@
   "Index matching migration IDs to known migrations."
   (atom {}))
 
-(defn wrap-verbosity [{:keys [id up down] :as migration}]
+(defn ^:internal record-migrations [migrations]
+  (swap! migration-index core/into-index migrations))
+
+(defn ^:internal wrap-verbosity [{:keys [id up down] :as migration}]
   (assoc migration
          :up   (fn [db] (println "Applying" id)     (up db))
          :down (fn [db] (println "Rolling back" id) (down db))))
-
-(defn record-migrations [migrations]
-  (swap! migration-index core/into-index migrations))
 
 (defn migrate
   "Migrate the database up to the latest migration."
