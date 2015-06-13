@@ -1,5 +1,5 @@
 (ns ragtime.core
-  "Functions and macros for defining and applying migrations."
+  "Functions for applying and rolling back migrations."
   (:require [ragtime.strategy :as strategy]))
 
 (defprotocol Migratable
