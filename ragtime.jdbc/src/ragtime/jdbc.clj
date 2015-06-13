@@ -67,6 +67,14 @@
 (defn- file-extension [file]
   (re-find #"\.[^.]*$" (str file)))
 
+(let [sep java.io.File/separator
+      re  (re-pattern (str "([^" sep "]*)" sep "?$"))]
+  (defn- basename [file]
+    (second (re-find re (str file)))))
+
+(defn- remove-extension [file]
+  (second (re-matches #"(.*)\.[^.]*" (str file))))
+
 (defmulti load-files
   "Given an collection of files with the same extension, return a ordered
   collection of migrations."
@@ -76,7 +84,10 @@
 
 (defmethod load-files ".edn" [files]
   (for [file (sort files)]
-    (sql-migration (edn/read-string (slurp file)))))
+    (-> (slurp file)
+        (edn/read-string)
+        (update-in [:id] #(or % (-> file basename remove-extension)))
+        (sql-migration))))
 
 (defn load-directory
   "Load a collection of Ragtime migrations from a directory."
