@@ -5,7 +5,8 @@
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql])
-  (:import [java.util Date]
+  (:import [java.io File]
+           [java.util Date]
            [java.sql SQLException]
            [java.text SimpleDateFormat]))
 
@@ -67,10 +68,9 @@
 (defn- file-extension [file]
   (re-find #"\.[^.]*$" (str file)))
 
-(let [sep java.io.File/separator
-      re  (re-pattern (str "([^" sep "]*)" sep "?$"))]
+(let [pattern (re-pattern (str "([^" File/separator "]*)" File/separator "?$"))]
   (defn- basename [file]
-    (second (re-find re (str file)))))
+    (second (re-find pattern (str file)))))
 
 (defn- remove-extension [file]
   (second (re-matches #"(.*)\.[^.]*" (str file))))
