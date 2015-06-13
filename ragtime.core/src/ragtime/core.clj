@@ -45,7 +45,7 @@
   migrations that need to be applied. The default strategy is
   ragtime.strategy/raise-error. "
   ([db index migrations]
-     (migrate-all db index migrations strategy/raise-error))
+   (migrate-all db index migrations strategy/raise-error))
   ([db index migrations strategy]
    (let [applied (applied-migrations db (into-index index migrations))]
      (doseq [[action migration] (strategy applied migrations)]
@@ -58,10 +58,10 @@
   migration index. If n is not specified, only the very last migration is
   rolled back."
   ([db index]
-     (rollback-last db index 1))
+   (rollback-last db index 1))
   ([db index n]
-     (doseq [migration (take n (reverse (applied-migrations db index)))]
-       (rollback db migration))))
+   (doseq [migration (take n (reverse (applied-migrations db index)))]
+     (rollback db migration))))
 
 (defn rollback-to
   "Rollback to a specific migration ID, using the supplied migration index."
