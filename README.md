@@ -1,6 +1,6 @@
 # Ragtime
 
-[![Build Status](https://secure.travis-ci.org/weavejester/ragtime.png)](http://travis-ci.org/weavejester/ragtime)
+[![Build Status](https://travis-ci.org/weavejester/ragtime.svg?branch=dev)](https://travis-ci.org/weavejester/ragtime)
 
 Ragtime is a Clojure library for migrating structured data. It defines
 a common interface for expressing migrations, much like [Ring][1]
