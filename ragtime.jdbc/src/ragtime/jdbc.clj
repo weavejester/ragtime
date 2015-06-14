@@ -4,7 +4,8 @@
   (:require [ragtime.core :as ragtime]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojure.java.jdbc :as sql])
+            [clojure.java.jdbc :as sql]
+            [resauce.core :as resauce])
   (:import [java.io File]
            [java.util Date]
            [java.sql SQLException]
@@ -83,17 +84,21 @@
 (defmethod load-files :default [files])
 
 (defmethod load-files ".edn" [files]
-  (for [file (sort files)]
+  (for [file (sort-by str files)]
     (-> (slurp file)
         (edn/read-string)
         (update-in [:id] #(or % (-> file basename remove-extension)))
         (sql-migration))))
 
+(defn- load-all-files [files]
+  (mapcat load-files (vals (group-by file-extension files))))
+
 (defn load-directory
   "Load a collection of Ragtime migrations from a directory."
   [path]
-  (->> (io/file path)
-       (file-seq)
-       (group-by file-extension)
-       (vals)
-       (mapcat load-files)))
+  (load-all-files (file-seq (io/file path))))
+
+(defn load-resources
+  "Load a collection of Ragtime migrations from a classpath prefix."
+  [path]
+  (load-all-files (resauce/resource-dir path)))

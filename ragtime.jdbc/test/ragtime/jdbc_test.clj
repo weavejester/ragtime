@@ -42,3 +42,13 @@
     (ragtime/rollback-last db (count ms))
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))
     (is (empty? (ragtime/applied-migration-ids db)))))
+
+(deftest test-load-resources
+  (let [db (jdbc/sql-database {:connection-uri "jdbc:h2:mem:test5;DB_CLOSE_DELAY=-1"})
+        ms (jdbc/load-resources "migrations")]
+    (ragtime/migrate-all db ms)
+    (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR"} (table-names db)))
+    (is (= ["001-test" "002-bar"] (ragtime/applied-migration-ids db)))
+    (ragtime/rollback-last db (count ms))
+    (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))
+    (is (empty? (ragtime/applied-migration-ids db)))))
