@@ -2,46 +2,58 @@
 
 [![Build Status](https://travis-ci.org/weavejester/ragtime.svg?branch=dev)](https://travis-ci.org/weavejester/ragtime)
 
-Ragtime is a Clojure library for migrating structured data. It defines
-a common interface for expressing migrations, much like [Ring][1]
-defines a common interface for expressing web applications.
+Ragtime is a Clojure library for migrating structured data in a way
+that's database independent. It defines a common interface for
+expressing migrations, much like [Ring][] defines a common interface
+for expressing web applications.
 
-[1]: https://github.com/ring-clojure/ring
-
-## Libraries
-
-* ragtime.core -
-  database independent tools and functions for managing migrations
-
-* ragtime.sql -
-  an adapter for applying migrations to a SQL database
-  
-* ragtime.sql.files -
-  provides a way of specifying migrations as SQL script files
-
-* ragtime.lein -
-  a Leiningen plugin that wraps ragtime.core
+[ring]: https://github.com/ring-clojure/ring
 
 ## Installation
 
-Add ragtime.core as a dependency if you just want the database-
-independent core:
+Add the following dependency to your project file:
+
+    [ragtime "0.4.0-SNAPSHOT"]
+
+## Usage
+
+Ragtime needs three pieces of data to work:
+
+1. A migratable **database** connection
+2. An ordered sequence of **migrations**
+3. A **strategy** on how to deal with conflicts
+
+We can declare these in a map for a JDBC SQL database:
 
 ```clojure
-:dependencies [[ragtime/ragtime.core "0.3.9"]]
+(require '[ragtime.repl :as repl]
+         '[ragtime.jdbc :as jdbc]
+         '[ragtime.strategy :as strategy])
+
+(def config
+  {:database   (jdbc/sql-database {:connection-uri "jdbc:h2:file:example.h2"})
+   :migrations (jdbc/load-directory "migrations")
+   :strategy   strategy/rebase})
 ```
 
-Or add the full library if you want support for SQL databases:
+This configuration will attempt to use a [H2][] database called
+"example.h2", and look for migrations in a directory called
+"migrations".
+
+To migrate the migrations, we can use:
 
 ```clojure
-:dependencies [[ragtime "0.3.9"]]
+(repl/migrate config)
 ```
 
-If you want to integrate Ragtime into Leiningen:
+And to rollback a migration:
 
 ```clojure
-:plugins [[ragtime/ragtime.lein "0.3.9"]]
+(repl/rollback config)
 ```
+
+[h2]: http://www.h2database.com/html/main.html
+
 
 ## Documentation
 
