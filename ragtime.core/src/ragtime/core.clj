@@ -1,7 +1,7 @@
 (ns ragtime.core
   "Functions and macros for defining and applying migrations."
-  (:require [ragtime.strategy :as strategy])
-  (:import java.net.URI))
+  (:require [ragtime.strategy :as strategy]
+            [clojure.string :as str]))
 
 (defprotocol Migratable
   "Protocol for a database that can be migrated."
@@ -16,7 +16,7 @@
   "Create a Migratable database connection from a URL. Dispatches on the URL
   scheme."
   (fn [url]
-    (.getScheme (URI. url))))
+    (first (str/split url #":"))))
 
 (defonce defined-migrations (atom {}))
 
