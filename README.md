@@ -15,7 +15,7 @@ Add the following dependency to your project file:
 
     [ragtime "0.4.0-SNAPSHOT"]
 
-## Usage
+## Overview
 
 Ragtime needs three pieces of data to work:
 
@@ -23,37 +23,13 @@ Ragtime needs three pieces of data to work:
 2. An ordered sequence of **migrations**
 3. A **strategy** on how to deal with conflicts
 
-We can declare these in a map for a JDBC SQL database:
+Migrations are maps that contain three keys:
 
-```clojure
-(require '[ragtime.repl :as repl]
-         '[ragtime.jdbc :as jdbc]
-         '[ragtime.strategy :as strategy])
-
-(def config
-  {:database   (jdbc/sql-database {:connection-uri "jdbc:h2:file:example.h2"})
-   :migrations (jdbc/load-directory "migrations")
-   :strategy   strategy/rebase})
-```
-
-This configuration will attempt to use a [H2][] database called
-"example.h2", and look for migrations in a directory called
-"migrations".
-
-To migrate the migrations, we can use:
-
-```clojure
-(repl/migrate config)
-```
-
-And to rollback a migration:
-
-```clojure
-(repl/rollback config)
-```
-
-[h2]: http://www.h2database.com/html/main.html
-
+* `:id`   - a unique ID for the migration
+* `:up`   - a function that takes a database connection and applies
+            the migration to the database
+* `:down` - a function that takes a database connection and rolls back
+            the migration
 
 ## Documentation
 
