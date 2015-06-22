@@ -90,6 +90,17 @@
         (update-in [:id] #(or % (-> file basename remove-extension)))
         (sql-migration))))
 
+(defn- sql-file-parts [filename]
+  (rest (re-matches #"(.*?)\.(up|down)(?:\.(\d+))?\.sql" (str filename))))
+
+(defmethod load-files ".sql" [files]
+  (for [[id files] (group-by (comp first sql-file-parts) files)]
+    (let [{:strs [up down]} (group-by (comp second sql-file-parts) files)]
+      (sql-migration
+       {:id   (basename id)
+        :up   (mapv slurp (sort-by str up))
+        :down (mapv slurp (sort-by str down))}))))
+
 (defn- load-all-files [files]
   (mapcat load-files (vals (group-by file-extension files))))
 
