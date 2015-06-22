@@ -31,6 +31,9 @@ Migrations are maps that contain three keys:
 * `:down` - a function that takes a database connection and rolls back
             the migration
 
+Ragtime comes with a way of loading SQL migrations from files, and
+applying them to a SQL database.
+
 ## Documentation
 
 * [Wiki](https://github.com/weavejester/ragtime/wiki)
