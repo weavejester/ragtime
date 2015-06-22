@@ -26,10 +26,8 @@ Ragtime needs three pieces of data to work:
 Migrations are maps that contain three keys:
 
 * `:id`   - a unique ID for the migration
-* `:up`   - a function that takes a database connection and applies
-            the migration to the database
-* `:down` - a function that takes a database connection and rolls back
-            the migration
+* `:up`   - a function that applies the migration to a database
+* `:down` - a function that rolls back the migration in a database
 
 Ragtime comes with a way of loading SQL migrations from files, and
 applying them to a SQL database.
