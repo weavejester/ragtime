@@ -1,6 +1,6 @@
 # Ragtime
 
-[![Build Status](https://travis-ci.org/weavejester/ragtime.svg?branch=dev)](https://travis-ci.org/weavejester/ragtime)
+[![Build Status](https://travis-ci.org/weavejester/ragtime.svg?branch=master)](https://travis-ci.org/weavejester/ragtime)
 
 Ragtime is a Clojure library for migrating structured data in a way
 that's database independent. It defines a common interface for
