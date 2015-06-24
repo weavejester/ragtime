@@ -4,7 +4,9 @@
             [ragtime.strategy :as strategy]))
 
 (def migration-index
-  "Index matching migration IDs to known migrations."
+  "An atom holding a map that matches migration IDs to known migrations. This
+  atom is updated automatically when the migrate or rollback functions are
+  called."
   (atom {}))
 
 (defn ^:internal ^:no-doc record-migrations [migrations]
