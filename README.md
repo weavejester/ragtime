@@ -37,7 +37,7 @@ applying them to a SQL database.
 * [Getting Started](https://github.com/weavejester/ragtime/wiki/Getting-Started)
 * [Concepts](https://github.com/weavejester/ragtime/wiki/Concepts)
 * [Leiningen Integration](https://github.com/weavejester/ragtime/wiki/Leiningen-Integration)
-* [API docs](http://weavejester.github.com/ragtime)
+* [API docs](http://weavejester.github.io/ragtime)
 
 ## License
 
