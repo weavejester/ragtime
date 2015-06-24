@@ -34,7 +34,8 @@ applying them to a SQL database.
 
 ## Documentation
 
-* [Wiki](https://github.com/weavejester/ragtime/wiki)
+* [Getting Started](https://github.com/weavejester/ragtime/wiki/Getting-Started)
+* [Concepts](https://github.com/weavejester/ragtime/wiki/Concepts)
 * [API docs](http://weavejester.github.com/ragtime)
 
 ## License
