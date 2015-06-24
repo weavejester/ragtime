@@ -43,6 +43,9 @@
                [(str "SELECT id FROM " migrations-table " ORDER BY created_at")]
                :row-fn :id)))
 
+(alter-meta! #'->SqlDatabase assoc :no-doc true)
+(alter-meta! #'map->SqlDatabase assoc :no-doc true)
+
 (defn sql-database
   "Given a db-spec and a map of options, return a Migratable database.
   The following options are allowed:
