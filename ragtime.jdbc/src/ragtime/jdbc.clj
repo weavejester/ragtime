@@ -81,7 +81,8 @@
 
 (defmulti load-files
   "Given an collection of files with the same extension, return a ordered
-  collection of migrations. Dispatches on extension (e.g. \".edn\")."
+  collection of migrations. Dispatches on extension (e.g. \".edn\"). Extend
+  this multimethod to support new formats for specifying SQL migrations."
   (fn [files] (file-extension (first files))))
 
 (defmethod load-files :default [files])
