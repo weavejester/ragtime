@@ -9,26 +9,36 @@
   called."
   (atom {}))
 
+(defn default-reporter
+  "A reporter function that just prints the migration ID to STDOUT."
+  [op id]
+  (case op
+    :up   (println "Applying" id)
+    :down (println "Rolling back" id)))
+
 (defn ^:internal ^:no-doc record-migrations [migrations]
   (swap! migration-index core/into-index migrations))
 
-(defn ^:internal ^:no-doc wrap-verbosity [{:keys [id up down] :as migration}]
+(defn ^:internal ^:no-doc wrap-reporting
+  [{:keys [id up down] :as migration} reporter]
   (assoc migration
-         :up   (fn [db] (println "Applying" id)     (up db))
-         :down (fn [db] (println "Rolling back" id) (down db))))
+         :up   (fn [db] (reporter :up id)   (up db))
+         :down (fn [db] (reporter :down id) (down db))))
 
 (defn migrate
   "Migrate the database up to the latest migration."
-  [{:keys [database migrations strategy]}]
-  (let [migrations (map wrap-verbosity migrations)
+  [{:keys [database migrations strategy reporter]
+    :or   {reporter default-reporter
+           strategy strategy/raise-error}}]
+  (let [migrations (map #(wrap-reporting % reporter) migrations)
         index      (record-migrations migrations)]
-    (core/migrate-all database index migrations (or strategy strategy/raise-error))))
+    (core/migrate-all database index migrations strategy)))
 
 (defn rollback
   "Rollback the database one or more migrations."
   ([config]
    (rollback config 1))
-  ([{:keys [database migrations]} n]
-   (let [migrations (map wrap-verbosity migrations)
+  ([{:keys [database migrations reporter] :or {reporter default-reporter}} n]
+   (let [migrations (map #(wrap-reporting % reporter) migrations)
          index      (record-migrations migrations)]
      (core/rollback-last database index n))))

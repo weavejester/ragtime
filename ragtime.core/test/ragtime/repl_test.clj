@@ -28,3 +28,10 @@
     (is (nil? (-> database :data deref :a)))
     (is (nil? (-> database :data deref :b)))
     (is (nil? (-> database :data deref :c)))))
+
+(deftest test-custom-reporter
+  (let [database (in-memory-db)
+        config   {:database database :migrations migrations :reporter prn}]
+    (is (= @(:data database) {:migrations #{}}))
+    (is (= (with-out-str (repl/migrate config))
+           ":up \"a\"\n:up \"b\"\n:up \"c\"\n"))))
