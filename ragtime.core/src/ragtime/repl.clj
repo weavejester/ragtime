@@ -26,7 +26,15 @@
          :down (fn [db] (reporter :down id) (down db))))
 
 (defn migrate
-  "Migrate the database up to the latest migration."
+  "Migrate the database up to the latest migration. Expects a configuration map
+  with the following keys:
+
+    :database  - a Migratable database
+    :migration - an ordered collection of migrations
+    :strategy  - the conflict strategy to use
+                 (defaults to ragtime.strategy/raise-error)
+    :reporter  - called when a migration is being applied
+                 (defaults to default-reporter)"
   [{:keys [database migrations strategy reporter]
     :or   {reporter default-reporter
            strategy strategy/raise-error}}]
@@ -35,7 +43,14 @@
     (core/migrate-all database index migrations strategy)))
 
 (defn rollback
-  "Rollback the database one or more migrations."
+  "Rollback the database one or more migrations. Expects a configuration map
+  and an optional number of migrations to roll back. The configuration expects
+  the following keys:
+
+    :database  - a Migratable database
+    :migration - an ordered collection of migrations
+    :reporter  - called when a migration is being applied
+                 (defaults to default-reporter) "
   ([config]
    (rollback config 1))
   ([{:keys [database migrations reporter] :or {reporter default-reporter}} n]
