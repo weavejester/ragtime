@@ -38,8 +38,9 @@
         ms  (jdbc/load-directory "test/migrations")
         idx (ragtime/into-index ms)]
     (ragtime/migrate-all db idx ms)
-    (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ" "QUZA" "QUZB"} (table-names db)))
-    (is (= #{"001-test" "002-bar" "003-test" "004-test"}
+    (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ" "QUZA" "QUZB" "QUXA" "QUXB"}
+           (table-names db)))
+    (is (= #{"001-test" "002-bar" "003-test" "004-test" "005-test"}
            (set (ragtime/applied-migration-ids db))))
     (ragtime/rollback-last db idx (count ms))
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))
@@ -50,8 +51,9 @@
         ms  (jdbc/load-resources "migrations")
         idx (ragtime/into-index ms)]
     (ragtime/migrate-all db idx ms)
-    (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ" "QUZA" "QUZB"} (table-names db)))
-    (is (= #{"001-test" "002-bar" "003-test" "004-test"}
+    (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ" "QUZA" "QUZB" "QUXA" "QUXB"}
+           (table-names db)))
+    (is (= #{"001-test" "002-bar" "003-test" "004-test" "005-test"}
            (set (ragtime/applied-migration-ids db))))
     (ragtime/rollback-last db idx (count ms))
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))

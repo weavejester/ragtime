@@ -1,15 +1,16 @@
 (ns ragtime.jdbc
   "Functions for loading SQL migrations and applying them to a SQL database."
   (:refer-clojure :exclude [load-file])
-  (:require [ragtime.core :as ragtime]
-            [clojure.edn :as edn]
+  (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]
+            [clojure.string :as str]
+            [ragtime.core :as ragtime]
             [resauce.core :as resauce])
   (:import [java.io File]
-           [java.util Date]
            [java.sql SQLException]
-           [java.text SimpleDateFormat]))
+           [java.text SimpleDateFormat]
+           [java.util Date]))
 
 (defn- migrations-table-ddl [table-name]
   (sql/create-table-ddl table-name
@@ -94,16 +95,19 @@
         (update-in [:id] #(or % (-> file basename remove-extension)))
         (sql-migration))))
 
-(defn- sql-file-parts [filename]
-  (rest (re-matches #"(.*?)\.(up|down)(?:\.(\d+))?\.sql" (str filename))))
+(defn- sql-file-parts [file]
+  (rest (re-matches #"(.*?)\.(up|down)(?:\.(\d+))?\.sql" (str file))))
+
+(defn- read-sql [file]
+  (str/split (slurp file) #"(?m)\n\s*--;;\s*\n"))
 
 (defmethod load-files ".sql" [files]
   (for [[id files] (group-by (comp first sql-file-parts) files)]
     (let [{:strs [up down]} (group-by (comp second sql-file-parts) files)]
       (sql-migration
        {:id   (basename id)
-        :up   (mapv slurp (sort-by str up))
-        :down (mapv slurp (sort-by str down))}))))
+        :up   (vec (mapcat read-sql (sort-by str up)))
+        :down (vec (mapcat read-sql (sort-by str down)))}))))
 
 (defn- load-all-files [files]
   (mapcat load-files (vals (group-by file-extension files))))
