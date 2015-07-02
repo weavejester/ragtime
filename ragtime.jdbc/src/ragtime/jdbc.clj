@@ -5,7 +5,7 @@
             [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]
             [clojure.string :as str]
-            [ragtime.core :as ragtime]
+            [ragtime.protocols :as p]
             [resauce.core :as resauce])
   (:import [java.io File]
            [java.sql SQLException]
@@ -27,7 +27,7 @@
       (.format dt)))
 
 (defrecord SqlDatabase [db-spec migrations-table]
-  ragtime/Migratable
+  p/DataStore
   (add-migration-id [_ id]
     (ensure-migrations-table-exists db-spec migrations-table)
     (sql/insert! db-spec migrations-table
@@ -62,13 +62,20 @@
   (doseq [s statements]
     (sql/execute! db-spec [s])))
 
+(defrecord SqlMigration [id up down]
+  p/Migration
+  (id [_] id)
+  (run-up!   [_ db] (execute-sql! (:db-spec db) up))
+  (run-down! [_ db] (execute-sql! (:db-spec db) down)))
+
+(alter-meta! #'->SqlMigration assoc :no-doc true)
+(alter-meta! #'map->SqlMigration assoc :no-doc true)
+
 (defn sql-migration
   "Create a Ragtime migration from a map with a unique :id, and :up and :down
   keys that map to ordered collection of SQL strings."
-  [{:keys [id up down]}]
-  {:id   id
-   :up   #(execute-sql! (:db-spec %) up)
-   :down #(execute-sql! (:db-spec %) down)})
+  [migration-map]
+  (map->SqlMigration migration-map))
 
 (defn- file-extension [file]
   (re-find #"\.[^.]*$" (str file)))

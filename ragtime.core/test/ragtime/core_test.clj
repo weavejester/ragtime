@@ -1,10 +1,11 @@
 (ns ragtime.core-test
   (:require [clojure.test :refer :all]
             [ragtime.core :refer :all]
+            [ragtime.protocols :as p]
             [ragtime.strategy :as strategy]))
 
 (defrecord InMemoryDB [data]
-  Migratable
+  p/DataStore
   (add-migration-id [_ id]
     (swap! data update-in [:migrations] conj id))
   (remove-migration-id [_ id]
@@ -16,9 +17,10 @@
   (InMemoryDB. (atom {:migrations #{}})))
 
 (defn assoc-migration [id key val]
-  {:id   id
-   :up   (fn [db] (swap! (:data db) assoc key val))
-   :down (fn [db] (swap! (:data db) dissoc key))})
+  (reify p/Migration
+    (id [_] id)
+    (run-up! [_ store] (swap! (:data store) assoc key val))
+    (run-down! [_ store] (swap! (:data store) dissoc key))))
 
 (deftest test-into-index
   (let [assoc-x (assoc-migration "assoc-x" :x 1)
@@ -62,7 +64,7 @@
   remembered by the application."
   (let [database (in-memory-db)
         assoc-y  (assoc-migration "assoc-y" :y 2)]
-    (add-migration-id database (:id assoc-y))
+    (p/add-migration-id database (p/id assoc-y))
     (migrate-all database {} [assoc-y] strategy/apply-new)
     (is (nil? (:y @(:data database))))))
 

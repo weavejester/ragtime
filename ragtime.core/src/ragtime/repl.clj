@@ -1,6 +1,7 @@
 (ns ragtime.repl
   "Convenience functions for running in the REPL."
   (:require [ragtime.core :as core]
+            [ragtime.protocols :as p]
             [ragtime.strategy :as strategy]))
 
 (def migration-index
@@ -19,11 +20,16 @@
 (defn ^:internal ^:no-doc record-migrations [migrations]
   (swap! migration-index core/into-index migrations))
 
-(defn ^:internal ^:no-doc wrap-reporting
-  [{:keys [id up down] :as migration} reporter]
-  (assoc migration
-         :up   (fn [db] (reporter :up id)   (up db))
-         :down (fn [db] (reporter :down id) (down db))))
+(defn ^:internal ^:no-doc wrap-reporting [migration reporter]
+  (let [id (p/id migration)]
+    (reify p/Migration
+      (id [_] id)
+      (run-up! [_ store]
+        (reporter :up id)
+        (p/run-up! migration store))
+      (run-down! [_ store]
+        (reporter :down id)
+        (p/run-down! migration store)))))
 
 (defn migrate
   "Migrate the database up to the latest migration. Expects a configuration map
