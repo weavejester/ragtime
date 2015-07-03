@@ -11,7 +11,7 @@
 
 (deftest test-repl-functions
   (let [database (in-memory-db)
-        config   {:database database :migrations migrations}]
+        config   {:datastore database :migrations migrations}]
     (is (= @(:data database) {:migrations #{}}))
     (is (= (with-out-str (repl/migrate config))
            "Applying a\nApplying b\nApplying c\n"))
@@ -31,7 +31,7 @@
 
 (deftest test-custom-reporter
   (let [database (in-memory-db)
-        config   {:database database :migrations migrations :reporter prn}]
+        config   {:datastore database :migrations migrations :reporter prn}]
     (is (= @(:data database) {:migrations #{}}))
     (is (= (with-out-str (repl/migrate config))
            ":up \"a\"\n:up \"b\"\n:up \"c\"\n"))))

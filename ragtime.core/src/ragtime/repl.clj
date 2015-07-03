@@ -32,34 +32,34 @@
         (p/run-down! migration store)))))
 
 (defn migrate
-  "Migrate the database up to the latest migration. Expects a configuration map
+  "Migrate the datastore up to the latest migration. Expects a configuration map
   with the following keys:
 
-    :database  - a Migratable database
-    :migration - an ordered collection of migrations
-    :strategy  - the conflict strategy to use
-                 (defaults to ragtime.strategy/raise-error)
-    :reporter  - called when a migration is being applied
-                 (defaults to default-reporter)"
-  [{:keys [database migrations strategy reporter]
+    :datastore  - a DataStore instance
+    :migrations - an ordered collection of Migrations
+    :strategy   - the conflict strategy to use
+                  (defaults to ragtime.strategy/raise-error)
+    :reporter   - called when a migration is being applied
+                  (defaults to default-reporter)"
+  [{:keys [datastore migrations strategy reporter]
     :or   {reporter default-reporter
            strategy strategy/raise-error}}]
   (let [migrations (map #(wrap-reporting % reporter) migrations)
         index      (record-migrations migrations)]
-    (core/migrate-all database index migrations strategy)))
+    (core/migrate-all datastore index migrations strategy)))
 
 (defn rollback
-  "Rollback the database one or more migrations. Expects a configuration map
+  "Rollback the datastore one or more migrations. Expects a configuration map
   and an optional number of migrations to roll back. The configuration expects
   the following keys:
 
-    :database  - a Migratable database
-    :migration - an ordered collection of migrations
-    :reporter  - called when a migration is being applied
-                 (defaults to default-reporter) "
+    :datastore  - a DataStore instance
+    :migrations - an ordered collection of Migrations
+    :reporter   - called when a migration is being applied
+                  (defaults to default-reporter) "
   ([config]
    (rollback config 1))
-  ([{:keys [database migrations reporter] :or {reporter default-reporter}} n]
+  ([{:keys [datastore migrations reporter] :or {reporter default-reporter}} n]
    (let [migrations (map #(wrap-reporting % reporter) migrations)
          index      (record-migrations migrations)]
-     (core/rollback-last database index n))))
+     (core/rollback-last datastore index n))))
