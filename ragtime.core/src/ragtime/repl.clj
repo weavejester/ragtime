@@ -50,8 +50,8 @@
 
 (defn rollback
   "Rollback the datastore one or more migrations. Expects a configuration map
-  and an optional number of migrations to roll back. The configuration expects
-  the following keys:
+  and an optional number of migrations to roll back OR a migration ID to
+  rollback to. The configuration expects the following keys:
 
     :datastore  - a DataStore instance
     :migrations - an ordered collection of Migrations
@@ -59,7 +59,10 @@
                   (defaults to default-reporter) "
   ([config]
    (rollback config 1))
-  ([{:keys [datastore migrations reporter] :or {reporter default-reporter}} n]
+  ([{:keys [datastore migrations reporter] :or {reporter default-reporter}}
+    amount-or-id]
    (let [migrations (map #(wrap-reporting % reporter) migrations)
          index      (record-migrations migrations)]
-     (core/rollback-last datastore index n))))
+     (if (integer? amount-or-id)
+       (core/rollback-last datastore index amount-or-id)
+       (core/rollback-to datastore index amount-or-id)))))

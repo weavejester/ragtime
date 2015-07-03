@@ -27,6 +27,13 @@
            "Rolling back b\nRolling back a\n"))
     (is (nil? (-> database :data deref :a)))
     (is (nil? (-> database :data deref :b)))
+    (is (nil? (-> database :data deref :c)))
+    (is (= (with-out-str
+             (repl/migrate config)
+             (repl/rollback config "a"))
+           "Applying a\nApplying b\nApplying c\nRolling back c\nRolling back b\n"))
+    (is (= 1 (-> database :data deref :a)))
+    (is (nil? (-> database :data deref :b)))
     (is (nil? (-> database :data deref :c)))))
 
 (deftest test-custom-reporter
