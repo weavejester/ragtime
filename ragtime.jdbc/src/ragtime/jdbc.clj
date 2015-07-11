@@ -109,7 +109,7 @@
   (str/split (slurp file) #"(?m)\n\s*--;;\s*\n"))
 
 (defmethod load-files ".sql" [files]
-  (for [[id files] (group-by (comp first sql-file-parts) files)]
+  (for [[id files] (group-by (comp first sql-file-parts) (sort-by str files))]
     (let [{:strs [up down]} (group-by (comp second sql-file-parts) files)]
       (sql-migration
        {:id   (basename id)
