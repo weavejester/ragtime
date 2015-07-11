@@ -40,8 +40,8 @@
     (ragtime/migrate-all db idx ms)
     (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ" "QUZA" "QUZB" "QUXA" "QUXB"}
            (table-names db)))
-    (is (= #{"001-test" "002-bar" "003-test" "004-test" "005-test"}
-           (set (ragtime/applied-migration-ids db))))
+    (is (= ["001-test" "002-bar" "003-test" "004-test" "005-test"]
+           (ragtime/applied-migration-ids db)))
     (ragtime/rollback-last db idx (count ms))
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))
     (is (empty? (ragtime/applied-migration-ids db)))))
@@ -53,8 +53,8 @@
     (ragtime/migrate-all db idx ms)
     (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ" "QUZA" "QUZB" "QUXA" "QUXB"}
            (table-names db)))
-    (is (= #{"001-test" "002-bar" "003-test" "004-test" "005-test"}
-           (set (ragtime/applied-migration-ids db))))
+    (is (= ["001-test" "002-bar" "003-test" "004-test" "005-test"]
+           (ragtime/applied-migration-ids db)))
     (ragtime/rollback-last db idx (count ms))
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))
     (is (empty? (ragtime/applied-migration-ids db)))))

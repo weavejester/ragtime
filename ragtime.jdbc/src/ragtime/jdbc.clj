@@ -89,7 +89,7 @@
 (defmethod load-files :default [files])
 
 (defmethod load-files ".edn" [files]
-  (for [file (sort-by str files)]
+  (for [file files]
     (-> (slurp file)
         (edn/read-string)
         (update-in [:id] #(or % (-> file basename remove-extension)))
@@ -110,7 +110,10 @@
         :down (vec (mapcat read-sql (sort-by str down)))}))))
 
 (defn- load-all-files [files]
-  (mapcat load-files (vals (group-by file-extension files))))
+  (->> (sort-by str files)
+       (group-by file-extension)
+       (vals)
+       (mapcat load-files)))
 
 (defn load-directory
   "Load a collection of Ragtime migrations from a directory."
