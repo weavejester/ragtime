@@ -6,7 +6,7 @@
   :dependencies [[ragtime/ragtime.core "0.5.0-SNAPSHOT"]
                  [ragtime/ragtime.jdbc "0.5.0-SNAPSHOT"]]
   :plugins [[lein-sub "0.3.0"]
-            [codox "0.8.12"]]
+            [codox "0.8.13"]]
   :sub ["ragtime.core" "ragtime.jdbc"]
   :codox {:sources ["ragtime.core/src"
                     "ragtime.jdbc/src"]})
