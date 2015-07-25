@@ -19,15 +19,16 @@ Add the following dependency to your project file:
 
 Ragtime needs three pieces of data to work:
 
-1. A migratable **database** connection
+1. A migratable **data store**
 2. An ordered sequence of **migrations**
 3. A **strategy** on how to deal with conflicts
 
-Migrations are maps that contain three keys:
+Since 0.5.0, migrations are implementations of the Migration protocol,
+which has three methods:
 
-* `:id`   - a unique ID for the migration
-* `:up`   - a function that applies the migration to a database
-* `:down` - a function that rolls back the migration in a database
+* `id`        - returns a unique ID for the migration
+* `run-up!`   - applies the migration to a database
+* `run-down!` - rolls back the migration in a database
 
 Ragtime comes with a way of loading SQL migrations from files, and
 applying them to a SQL database.
