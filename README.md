@@ -23,7 +23,11 @@ Ragtime needs three pieces of data to work:
 2. An ordered sequence of **migrations**
 3. A **strategy** on how to deal with conflicts
 
-Since 0.5.0, migrations are implementations of the Migration protocol,
+A data store is an implementation of the `DataStore` protocol, and
+tells Ragtime how to record which migrations are applied to an
+arbitrary store of data, such as a database.
+
+Since 0.5.0, migrations are implementations of the `Migration` protocol,
 which has three methods:
 
 * `id`        - returns a unique ID for the migration
