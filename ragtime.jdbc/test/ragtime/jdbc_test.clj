@@ -5,8 +5,11 @@
             [ragtime.protocols :as p]
             [clojure.java.jdbc :as sql]))
 
+(defn new-connection []
+  (sql/get-connection {:connection-uri "jdbc:h2:mem:"}))
+
 (deftest test-add-migrations
-  (let [db (jdbc/sql-database {:connection-uri "jdbc:h2:mem:test1;DB_CLOSE_DELAY=-1"})]
+  (let [db (jdbc/sql-database {:connection (new-connection)})]
     (p/add-migration-id db "12")
     (p/add-migration-id db "13")
     (p/add-migration-id db "20")
@@ -15,8 +18,8 @@
     (is (= ["12" "20"] (p/applied-migration-ids db)))))
 
 (deftest test-migrations-table
-  (let [db (jdbc/sql-database {:connection-uri "jdbc:h2:mem:test2;DB_CLOSE_DELAY=-1"}
-                         {:migrations-table "migrations"})]
+  (let [db (jdbc/sql-database {:connection (new-connection)}
+                              {:migrations-table "migrations"})]
     (p/add-migration-id db "12")
     (is (= ["12"]
            (sql/query (:db-spec db) ["SELECT * FROM migrations"] :row-fn :id)))))
@@ -25,7 +28,7 @@
   (set (sql/query (:db-spec db) ["SHOW TABLES"] :row-fn :table_name)))
 
 (deftest test-sql-migration
-  (let [db (jdbc/sql-database {:connection-uri "jdbc:h2:mem:test3;DB_CLOSE_DELAY=-1"})
+  (let [db (jdbc/sql-database {:connection (new-connection)})
         m  (jdbc/sql-migration {:id   "01"
                                 :up   ["CREATE TABLE foo (id int)"]
                                 :down ["DROP TABLE foo"]})]
@@ -35,7 +38,7 @@
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))))
 
 (deftest test-load-directory
-  (let [db  (jdbc/sql-database {:connection-uri "jdbc:h2:mem:test4;DB_CLOSE_DELAY=-1"})
+  (let [db  (jdbc/sql-database {:connection (new-connection)})
         ms  (jdbc/load-directory "test/migrations")
         idx (core/into-index ms)]
     (core/migrate-all db idx ms)
@@ -48,7 +51,7 @@
     (is (empty? (p/applied-migration-ids db)))))
 
 (deftest test-load-resources
-  (let [db  (jdbc/sql-database {:connection-uri "jdbc:h2:mem:test5;DB_CLOSE_DELAY=-1"})
+  (let [db  (jdbc/sql-database {:connection (new-connection)})
         ms  (jdbc/load-resources "migrations")
         idx (core/into-index ms)]
     (core/migrate-all db idx ms)
