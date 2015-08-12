@@ -3,6 +3,7 @@
             [ragtime.jdbc :as jdbc]
             [ragtime.core :as core]
             [ragtime.protocols :as p]
+            [clojure.java.io :as io]
             [clojure.java.jdbc :as sql]))
 
 (defn new-connection []
@@ -62,3 +63,12 @@
     (core/rollback-last db idx (count ms))
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))
     (is (empty? (p/applied-migration-ids db)))))
+
+(deftest test-migration-ordering
+  (let [ids   (for [i (range 10000)] (format "%04d-test" i))
+        files (mapcat (fn [id] [(str id ".up.sql") (str id ".down.sql")]) ids)]
+    (with-redefs [file-seq (constantly (map io/file (shuffle files)))
+                  slurp    (constantly "SELECT 1;")]
+      (let [migrations (jdbc/load-directory "foo")]
+        (is (= (count migrations) 10000))
+        (is (= (map :id migrations) ids))))))
