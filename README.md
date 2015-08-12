@@ -13,7 +13,7 @@ for expressing web applications.
 
 Add the following dependency to your project file:
 
-    [ragtime "0.5.0"]
+    [ragtime "0.5.1"]
 
 ## Overview
 
