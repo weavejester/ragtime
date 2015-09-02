@@ -1,8 +1,20 @@
 (ns ragtime.repl
   "Convenience functions for running in the REPL."
-  (:require [ragtime.core :as core]
+  (:require [clojure.java.io :as io]
+            [clojure.string :as s]
+            [ragtime.core :as core]
             [ragtime.protocols :as p]
             [ragtime.strategy :as strategy]))
+
+(def date-format
+  "Format for DateTime"
+  "yyyyMMddHHmmss")
+(def migrations-dir
+  "Default migrations directory"
+  "resources/migrations/")
+(def ragtime-format-edn
+  "EDN template for SQL migrations"
+  "{:up [\"\"]\n :down [\"\"]}")
 
 (def migration-index
   "An atom holding a map that matches migration IDs to known migrations. This
@@ -30,6 +42,28 @@
       (run-down! [_ store]
         (reporter :down id)
         (p/run-down! migration store)))))
+
+(defn migrations-dir-exist?
+  "Checks if 'resources/migrations' directory exists"
+  []
+  (.isDirectory (io/file migrations-dir)))
+
+(defn now
+  "Gets the current DateTime"  []
+  (.format (java.text.SimpleDateFormat. date-format) (new java.util.Date)))
+
+(defn migration-file-path
+  "Complete migration file path"
+  [name]
+  (str migrations-dir (now) "_" (s/replace name #"\s+|-+|_+" "_") ".edn"))
+
+(defn create-migration
+  "Creates a migration file with the current DateTime"
+  [name]
+  (let [migration-file (migration-file-path name)]
+    (if-not (migrations-dir-exist?)
+      (io/make-parents migration-file))
+    (spit migration-file ragtime-format-edn)))
 
 (defn migrate
   "Migrate the datastore up to the latest migration. Expects a configuration map

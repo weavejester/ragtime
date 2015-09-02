@@ -4,10 +4,16 @@
             [ragtime.repl :as repl]
             [ragtime.core :as core]))
 
+(def test-datetime #"^\d{14}$")
+(def test-migration-path #"^resources/migrations/\d{14}_test.edn$")
+
 (def migrations
   [(assoc-migration "a" :a 1)
    (assoc-migration "b" :b 2)
    (assoc-migration "c" :c 3)])
+
+(defn- contains-string? [matcher r-string]
+  (string? (re-find matcher r-string)))
 
 (deftest test-repl-functions
   (let [database (in-memory-db)
@@ -42,3 +48,11 @@
     (is (= @(:data database) {:migrations #{}}))
     (is (= (with-out-str (repl/migrate config))
            ":up \"a\"\n:up \"b\"\n:up \"c\"\n"))))
+
+(deftest test-now
+  (testing "Creates a DateTime string"
+    (is (contains-string? test-datetime (repl/now)))))
+
+(deftest test-migration-file-path
+  (testing "Creates a migration file path string"
+    (is (contains-string? test-migration-path (repl/migration-file-path "test")))))
