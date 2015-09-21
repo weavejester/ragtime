@@ -38,7 +38,11 @@
 
 (deftest test-custom-reporter
   (let [database (in-memory-db)
-        config   {:datastore database :migrations migrations :reporter prn}]
+        config   {:datastore database
+                  :migrations migrations
+                  :reporter (fn [ds op id] (prn (type ds) op id))}]
     (is (= @(:data database) {:migrations #{}}))
     (is (= (with-out-str (repl/migrate config))
-           ":up \"a\"\n:up \"b\"\n:up \"c\"\n"))))
+           (str "ragtime.core_test.InMemoryDB :up \"a\"\n"
+                "ragtime.core_test.InMemoryDB :up \"b\"\n"
+                "ragtime.core_test.InMemoryDB :up \"c\"\n")))))

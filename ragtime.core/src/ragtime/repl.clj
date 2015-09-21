@@ -12,7 +12,7 @@
 
 (defn default-reporter
   "A reporter function that just prints the migration ID to STDOUT."
-  [op id]
+  [_ op id]
   (case op
     :up   (println "Applying" id)
     :down (println "Rolling back" id)))
@@ -25,10 +25,10 @@
     (reify p/Migration
       (id [_] id)
       (run-up! [_ store]
-        (reporter :up id)
+        (reporter store :up id)
         (p/run-up! migration store))
       (run-down! [_ store]
-        (reporter :down id)
+        (reporter store :down id)
         (p/run-down! migration store)))))
 
 (defn migrate
