@@ -39,11 +39,12 @@
   ([store index migrations]
    (migrate-all store index migrations strategy/raise-error))
   ([store index migrations strategy]
-   (let [applied (applied-migrations store (into-index index migrations))]
-     (doseq [[action migration] (strategy applied migrations)]
+   (let [index   (into-index index migrations)
+         applied (p/applied-migration-ids store)]
+     (doseq [[action migration-id] (strategy applied (map p/id migrations))]
        (case action
-         :migrate  (migrate store migration)
-         :rollback (rollback store migration))))))
+         :migrate  (migrate store (index migration-id))
+         :rollback (rollback store (index migration-id)))))))
 
 (defn rollback-last
   "Rollback the last n migrations from the database, using the supplied

@@ -46,3 +46,13 @@
            (str "ragtime.core_test.InMemoryDB :up \"a\"\n"
                 "ragtime.core_test.InMemoryDB :up \"b\"\n"
                 "ragtime.core_test.InMemoryDB :up \"c\"\n")))))
+
+(deftest test-conflict-error
+  (let [database            (in-memory-db)
+        mixed-up-migrations [(migrations 0) (migrations 2) (migrations 1)]]
+    (with-out-str (repl/migrate {:datastore database :migrations migrations}))
+    (is (thrown-with-msg?
+         Exception
+         #"^Conflict! Expected c but b was applied\.$"
+         (with-out-str
+           (repl/migrate {:datastore database :migrations mixed-up-migrations}))))))
