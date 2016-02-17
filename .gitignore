@@ -5,7 +5,7 @@ lib/
 classes/
 target/
 checkouts/
-doc/
+codox/
 .lein-failures
 .lein-deps-sum
 .lein-repl-history
