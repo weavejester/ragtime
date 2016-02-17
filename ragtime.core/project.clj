@@ -1,4 +1,4 @@
-(defproject ragtime/ragtime.core "0.5.2"
+(defproject ragtime/ragtime.core "0.5.3"
   :description "A database-independent migration library"
   :url "https://github.com/weavejester/ragtime"
   :scm {:dir ".."}
