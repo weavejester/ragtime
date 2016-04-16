@@ -23,10 +23,10 @@
                               {:migrations-table "migrations"})]
     (p/add-migration-id db "12")
     (is (= ["12"]
-           (sql/query (:db-spec db) ["SELECT * FROM migrations"] :row-fn :id)))))
+           (sql/query (:db-spec db) ["SELECT * FROM migrations"] {:row-fn :id})))))
 
 (defn table-names [db]
-  (set (sql/query (:db-spec db) ["SHOW TABLES"] :row-fn :table_name)))
+  (set (sql/query (:db-spec db) ["SHOW TABLES"] {:row-fn :table_name})))
 
 (deftest test-sql-migration
   (let [db (jdbc/sql-database {:connection (new-connection)})
