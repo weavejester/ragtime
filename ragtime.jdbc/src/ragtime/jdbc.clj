@@ -14,8 +14,8 @@
 
 (defn- migrations-table-ddl [table-name]
   (sql/create-table-ddl table-name
-                        [:id "varchar(255)"]
-                        [:created_at "varchar(32)"]))
+                        [[:id "varchar(255)"]
+                         [:created_at "varchar(32)"]]))
 
 (defn- ensure-migrations-table-exists [db-spec migrations-table]
   (try
@@ -42,7 +42,7 @@
     (ensure-migrations-table-exists db-spec migrations-table)
     (sql/query db-spec
                [(str "SELECT id FROM " migrations-table " ORDER BY created_at")]
-               :row-fn :id)))
+               {:row-fn :id})))
 
 (alter-meta! #'->SqlDatabase assoc :no-doc true)
 (alter-meta! #'map->SqlDatabase assoc :no-doc true)
