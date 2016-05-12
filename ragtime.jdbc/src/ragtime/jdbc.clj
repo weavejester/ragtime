@@ -17,10 +17,18 @@
                         [[:id "varchar(255)"]
                          [:created_at "varchar(32)"]]))
 
+(defn- get-table-names [db-spec]
+  (-> (sql/get-connection db-spec)
+      (.getMetaData)
+      (.getTables nil nil "%" nil)
+      (sql/metadata-result {:row-fn :table_name})))
+
+(defn- table-exists? [db-spec ^String table-name]
+  (some #(.equalsIgnoreCase table-name %) (get-table-names db-spec)))
+
 (defn- ensure-migrations-table-exists [db-spec migrations-table]
-  (try
-    (sql/execute! db-spec [(migrations-table-ddl migrations-table)])
-    (catch SQLException _)))
+  (when-not (table-exists? db-spec migrations-table)
+    (sql/execute! db-spec [(migrations-table-ddl migrations-table)])))
 
 (defn- format-datetime [dt]
   (-> (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS")
