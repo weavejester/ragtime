@@ -18,10 +18,11 @@
                          [:created_at "varchar(32)"]]))
 
 (defn- get-table-names [db-spec]
-  (-> (sql/get-connection db-spec)
-      (.getMetaData)
-      (.getTables nil nil "%" nil)
-      (sql/metadata-result {:row-fn :table_name})))
+  (with-open [conn (sql/get-connection db-spec)]
+    (-> conn
+        (.getMetaData)
+        (.getTables nil nil "%" nil)
+        (sql/metadata-result {:row-fn :table_name}))))
 
 (defn- table-exists? [db-spec ^String table-name]
   (some #(.equalsIgnoreCase table-name %) (get-table-names db-spec)))
@@ -41,7 +42,7 @@
     (sql/insert! db-spec migrations-table
                  {:id         (str id)
                   :created_at (format-datetime (Date.))}))
-  
+
   (remove-migration-id [_ id]
     (ensure-migrations-table-exists db-spec migrations-table)
     (sql/delete! db-spec migrations-table ["id = ?" id]))
