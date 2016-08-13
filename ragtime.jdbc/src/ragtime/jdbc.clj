@@ -8,7 +8,6 @@
             [ragtime.protocols :as p]
             [resauce.core :as resauce])
   (:import [java.io File]
-           [java.sql SQLException]
            [java.text SimpleDateFormat]
            [java.util Date]))
 
@@ -17,12 +16,17 @@
                         [[:id "varchar(255)"]
                          [:created_at "varchar(32)"]]))
 
+(defn- get-table-names* [conn]
+  (-> conn
+      (.getMetaData)
+      (.getTables nil nil "%" nil)
+      (sql/metadata-result {:row-fn :table_name})))
+
 (defn- get-table-names [db-spec]
-  (with-open [conn (sql/get-connection db-spec)]
-    (-> conn
-        (.getMetaData)
-        (.getTables nil nil "%" nil)
-        (sql/metadata-result {:row-fn :table_name}))))
+  (if-let [conn (sql/db-find-connection db-spec)]
+    (get-table-names* conn)
+    (with-open [conn (sql/get-connection db-spec)]
+      (get-table-names* conn))))
 
 (defn- table-exists? [db-spec ^String table-name]
   (some #(.equalsIgnoreCase table-name %) (get-table-names db-spec)))

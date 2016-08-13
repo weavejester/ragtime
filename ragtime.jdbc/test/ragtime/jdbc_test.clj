@@ -31,7 +31,7 @@
 (defn table-names [db]
   (set (sql/query (:db-spec db) ["SHOW TABLES"] {:row-fn :table_name})))
 
-(deftest test-sql-migration
+(defn test-sql-migration [db-spec]
   (let [db (jdbc/sql-database db-spec)
         m  (jdbc/sql-migration {:id   "01"
                                 :up   ["CREATE TABLE foo (id int)"]
@@ -40,6 +40,14 @@
     (is (= #{"RAGTIME_MIGRATIONS" "FOO"} (table-names db)))
     (core/rollback db m)
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))))
+
+(deftest test-sql-migration-using-db-spec
+  (test-sql-migration db-spec))
+
+(deftest test-sql-migration-using-db-spec-with-existing-connection
+  (sql/with-db-connection
+    [conn db-spec]
+    (test-sql-migration conn)))
 
 (deftest test-load-directory
   (let [db  (jdbc/sql-database db-spec)
