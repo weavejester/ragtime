@@ -19,7 +19,7 @@
 (defn- get-table-names* [conn]
   (-> conn
       (.getMetaData)
-      (.getTables nil nil "%" nil)
+      (.getTables (.getCatalog conn) nil "%" nil)
       (sql/metadata-result {:row-fn :table_name})))
 
 (defn- get-table-names [db-spec]
