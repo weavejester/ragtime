@@ -132,10 +132,10 @@
         :down (vec (mapcat read-sql (sort-by str down)))}))))
 
 (defn- load-all-files [files]
-  (->> (sort-by str files)
-       (group-by file-extension)
+  (->> (group-by file-extension files)
        (vals)
-       (mapcat load-files)))
+       (mapcat load-files)
+       (sort-by :id)))
 
 (defn load-directory
   "Load a collection of Ragtime migrations from a directory."
