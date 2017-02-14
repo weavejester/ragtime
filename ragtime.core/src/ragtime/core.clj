@@ -62,7 +62,7 @@
   (let [migrations (applied-migrations store index)
         discards   (->> (reverse migrations)
                         (take-while #(not= (p/id %) migration-id)))]
-    (if (= discards migrations)
+    (if (= (count discards) (count migrations))
       (throw (Exception. (str "Could not find migration '" migration-id "' in database")))
       (doseq [migration discards]
         (rollback store migration)))))

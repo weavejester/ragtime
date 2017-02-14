@@ -94,3 +94,18 @@
     (is (= (:x @(:data database)) 1))
     (is (not (contains? @(:data database) :y)))
     (is (not (contains? @(:data database) :z)))))
+
+(deftest test-rollback-to-throws-exception-if-id-not-found
+  (let [database   (in-memory-db)
+        assoc-x    (assoc-migration "assoc-x" :x 1)
+        assoc-y    (assoc-migration "assoc-y" :y 2)
+        assoc-z    (assoc-migration "assoc-z" :z 3)
+        migrations [assoc-x assoc-y assoc-z]]
+    (migrate-all database {} migrations)
+    (is (thrown? Exception (rollback-to database (into-index migrations) "assoc-not-exists")))
+    (is (= (:x @(:data database)) 1))
+    (is (= (:y @(:data database)) 2))
+    (is (= (:z @(:data database)) 3))
+    (is (contains? @(:data database) :x))
+    (is (contains? @(:data database) :y))
+    (is (contains? @(:data database) :z))))
