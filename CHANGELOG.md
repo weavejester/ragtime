@@ -1,3 +1,8 @@
+## 0.6.4 (2017-02-15)
+
+* Fixed condition check comparing migrations to discards (#114)
+* Limited table check to connection catelog (#110)
+
 ## 0.6.3 (2016-08-15)
 
 * Added support for DB spec with existing connection
