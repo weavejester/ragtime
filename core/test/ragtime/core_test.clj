@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [ragtime.core :refer :all]
             [ragtime.protocols :as p]
-            [ragtime.strategy :as strategy]))
+            [ragtime.strategy :as strategy]
+            [ragtime.reporter :as reporter]))
 
 (defrecord InMemoryDB [data]
   p/DataStore
@@ -109,3 +110,17 @@
     (is (contains? @(:data database) :x))
     (is (contains? @(:data database) :y))
     (is (contains? @(:data database) :z))))
+
+(deftest test-reporting
+  (let [database   (in-memory-db)
+        migrations [(assoc-migration "assoc-x" :x 1)
+                    (assoc-migration "assoc-y" :y 2)]]
+    (is (= (with-out-str
+             (migrate-all database {} migrations strategy/rebase reporter/print))
+           "Applying assoc-x\nApplying assoc-y\n"))
+    (is (= (with-out-str
+             (rollback-to database (into-index migrations) "assoc-x" reporter/print))
+           "Rolling back assoc-y\n"))
+    (is (= (with-out-str
+             (rollback-last database (into-index migrations) 1 reporter/print))
+           "Rolling back assoc-x\n"))))

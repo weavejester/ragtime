@@ -1,7 +1,8 @@
 (ns ragtime.core
   "Functions for applying and rolling back migrations."
   (:require [ragtime.protocols :as p]
-            [ragtime.strategy :as strategy]))
+            [ragtime.strategy :as strategy]
+            [ragtime.reporter :as reporter]))
 
 (defn into-index
   "Add migrations to a map, using their :id as the key."
@@ -39,9 +40,12 @@
   ([store index migrations]
    (migrate-all store index migrations strategy/raise-error))
   ([store index migrations strategy]
+   (migrate-all store index migrations strategy reporter/silent))
+  ([store index migrations strategy reporter]
    (let [index   (into-index index migrations)
          applied (p/applied-migration-ids store)]
      (doseq [[action migration-id] (strategy applied (map p/id migrations))]
+       (reporter store ({:migrate :up, :rollback :down} action) migration-id)
        (case action
          :migrate  (migrate store (index migration-id))
          :rollback (rollback store (index migration-id)))))))
@@ -53,16 +57,22 @@
   ([store index]
    (rollback-last store index 1))
   ([store index n]
+   (rollback-last store index n reporter/silent))
+  ([store index n reporter]
    (doseq [migration (take n (reverse (applied-migrations store index)))]
+     (reporter store :down (p/id migration))
      (rollback store migration))))
 
 (defn rollback-to
   "Rollback to a specific migration ID, using the supplied migration index."
-  [store index migration-id]
-  (let [migrations (applied-migrations store index)
-        discards   (->> (reverse migrations)
-                        (take-while #(not= (p/id %) migration-id)))]
-    (if (= (count discards) (count migrations))
-      (throw (Exception. (str "Could not find migration '" migration-id "' in database")))
-      (doseq [migration discards]
-        (rollback store migration)))))
+  ([store index migration-id]
+   (rollback-to store index migration-id reporter/silent))
+  ([store index migration-id reporter]
+   (let [migrations (applied-migrations store index)
+         discards   (->> (reverse migrations)
+                         (take-while #(not= (p/id %) migration-id)))]
+     (if (= (count discards) (count migrations))
+       (throw (Exception. (str "Could not find migration '" migration-id "' in database")))
+       (doseq [migration discards]
+         (reporter store :down (p/id migration))
+         (rollback store migration))))))
