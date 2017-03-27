@@ -1,6 +1,7 @@
 (ns ragtime.strategy
   "Algorithms for managing conflicts between migrations applied to a database,
-  and migrations that we want to apply to the database.")
+  and migrations that we want to apply to the database."
+  (:require [ragtime.protocols :as p]))
 
 (defn- pad [colls]
   (let [n (apply max (map count colls))]
@@ -17,7 +18,7 @@
 
 (defn- split-at-conflict [applied migrations]
   (->> (zip applied migrations)
-       (drop-while (fn [[a m]] (= a m)))
+       (drop-while (fn [[a m]] (= (p/id a) (p/id m))))
        (unzip)
        (map (partial remove nil?))))
 
@@ -36,8 +37,8 @@
   (let [[conflicts unapplied] (split-at-conflict applied migrations)]
     (if (seq conflicts)
       (throw (Exception.
-              (str "Conflict! Expected " (first unapplied)
-                   " but " (first conflicts) " was applied.")))
+              (str "Conflict! Expected " (p/id (first unapplied))
+                   " but " (p/id (first conflicts)) " was applied.")))
       (for [m unapplied] [:migrate m]))))
 
 (defn rebase
