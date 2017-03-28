@@ -57,9 +57,6 @@
                [(str "SELECT id FROM " migrations-table " ORDER BY created_at")]
                {:row-fn :id})))
 
-(alter-meta! #'->SqlDatabase assoc :no-doc true)
-(alter-meta! #'map->SqlDatabase assoc :no-doc true)
-
 (defn sql-database
   "Given a db-spec and a map of options, return a Migratable database.
   The following options are allowed:
@@ -80,9 +77,6 @@
   (id [_] id)
   (run-up!   [_ db] (execute-sql! (:db-spec db) up))
   (run-down! [_ db] (execute-sql! (:db-spec db) down)))
-
-(alter-meta! #'->SqlMigration assoc :no-doc true)
-(alter-meta! #'map->SqlMigration assoc :no-doc true)
 
 (defn sql-migration
   "Create a Ragtime migration from a map with a unique :id, and :up and :down
