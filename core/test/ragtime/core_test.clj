@@ -52,7 +52,7 @@
     (migrate-all database index [assoc-x assoc-y])
     (is (= (:x @(:data database)) 1))
     (is (= (:y @(:data database)) 2))
-    (migrate-all database index [assoc-x assoc-z] strategy/rebase)
+    (migrate-all database index [assoc-x assoc-z] {:strategy strategy/rebase})
     (is (= (:x @(:data database)) 1))
     (is (nil? (:y @(:data database))))
     (is (= (:z @(:data database)) 3))))
@@ -66,7 +66,7 @@
   (let [database (in-memory-db)
         assoc-y  (assoc-migration "assoc-y" :y 2)]
     (p/add-migration-id database (p/id assoc-y))
-    (migrate-all database {} [assoc-y] strategy/apply-new)
+    (migrate-all database {} [assoc-y] {:strategy strategy/apply-new})
     (is (nil? (:y @(:data database))))))
 
 (deftest test-rollback-last
@@ -116,11 +116,14 @@
         migrations [(assoc-migration "assoc-x" :x 1)
                     (assoc-migration "assoc-y" :y 2)]]
     (is (= (with-out-str
-             (migrate-all database {} migrations strategy/rebase reporter/print))
+             (migrate-all database {} migrations
+                          {:strategy strategy/rebase, :reporter reporter/print}))
            "Applying assoc-x\nApplying assoc-y\n"))
     (is (= (with-out-str
-             (rollback-to database (into-index migrations) "assoc-x" reporter/print))
+             (rollback-to database (into-index migrations) "assoc-x"
+                          {:reporter reporter/print}))
            "Rolling back assoc-y\n"))
     (is (= (with-out-str
-             (rollback-last database (into-index migrations) 1 reporter/print))
+             (rollback-last database (into-index migrations) 1
+                            {:reporter reporter/print}))
            "Rolling back assoc-x\n"))))

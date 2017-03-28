@@ -38,12 +38,12 @@
   migrations that need to be applied. The default strategy is
   ragtime.strategy/raise-error."
   ([store index migrations]
-   (migrate-all store index migrations strategy/raise-error))
-  ([store index migrations strategy]
-   (migrate-all store index migrations strategy reporter/silent))
-  ([store index migrations strategy reporter]
-   (let [index   (into-index index migrations)
-         applied (p/applied-migration-ids store)]
+   (migrate-all store index migrations {}))
+  ([store index migrations options]
+   (let [strategy (:strategy options strategy/raise-error)
+         reporter (:reporter options reporter/silent)
+         index    (into-index index migrations)
+         applied  (p/applied-migration-ids store)]
      (doseq [[action migration-id] (strategy applied (map p/id migrations))]
        (reporter store ({:migrate :up, :rollback :down} action) migration-id)
        (case action
@@ -57,18 +57,20 @@
   ([store index]
    (rollback-last store index 1))
   ([store index n]
-   (rollback-last store index n reporter/silent))
-  ([store index n reporter]
-   (doseq [migration (take n (reverse (applied-migrations store index)))]
-     (reporter store :down (p/id migration))
-     (rollback store migration))))
+   (rollback-last store index n {}))
+  ([store index n options]
+   (let [reporter (:reporter options reporter/silent)]
+     (doseq [migration (take n (reverse (applied-migrations store index)))]
+       (reporter store :down (p/id migration))
+       (rollback store migration)))))
 
 (defn rollback-to
   "Rollback to a specific migration ID, using the supplied migration index."
   ([store index migration-id]
-   (rollback-to store index migration-id reporter/silent))
-  ([store index migration-id reporter]
-   (let [migrations (applied-migrations store index)
+   (rollback-to store index migration-id {}))
+  ([store index migration-id options]
+   (let [reporter   (:reporter options reporter/silent)
+         migrations (applied-migrations store index)
          discards   (->> (reverse migrations)
                          (take-while #(not= (p/id %) migration-id)))]
      (if (= (count discards) (count migrations))

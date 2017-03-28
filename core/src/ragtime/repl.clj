@@ -27,8 +27,9 @@
   [{:keys [datastore migrations strategy reporter]
     :or   {reporter reporter/print
            strategy strategy/raise-error}}]
-  (let [index (record-migrations migrations)]
-    (core/migrate-all datastore index migrations strategy reporter)))
+  (let [index   (record-migrations migrations)
+        options {:strategy strategy, :reporter reporter}]
+    (core/migrate-all datastore index migrations options)))
 
 (defn rollback
   "Rollback the datastore one or more migrations. Expects a configuration map
@@ -46,5 +47,5 @@
     amount-or-id]
    (let [index (record-migrations migrations)]
      (if (integer? amount-or-id)
-       (core/rollback-last datastore index amount-or-id reporter)
-       (core/rollback-to datastore index amount-or-id reporter)))))
+       (core/rollback-last datastore index amount-or-id {:reporter reporter})
+       (core/rollback-to datastore index amount-or-id {:reporter reporter})))))
