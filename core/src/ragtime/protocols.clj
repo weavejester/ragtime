@@ -1,4 +1,5 @@
-(ns ragtime.protocols)
+(ns ragtime.protocols
+  "Protocols for defining a migration and data store.")
 
 (defprotocol Migration
   "Protocol for a migration that can be applied to a DataStore."

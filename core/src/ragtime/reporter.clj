@@ -1,4 +1,5 @@
 (ns ragtime.reporter
+  "Functions for reporting on migrations that are applied or rolled back."
   (:refer-clojure :exclude [print]))
 
 (defn silent

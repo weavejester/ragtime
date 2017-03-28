@@ -31,12 +31,23 @@
   (p/remove-migration-id store (p/id migration)))
 
 (defn migrate-all
-  "Migrate a data store with the supplied index, migrations and
-  strategy. The index matches IDs in the data store with their
-  associated migrations. The strategy defines what to do if there are
-  conflicts between the migrations applied to the data store, and the
-  migrations that need to be applied. The default strategy is
-  ragtime.strategy/raise-error."
+  "Migrate a data store with the supplied index and migration sequence. The
+  index matches IDs in the data store with their associated migrations. The
+  migrations should be a sequential collection in the order in which they
+  should be applied to the database.
+
+  An additional map of options may be supplied that contains the following
+  keys:
+
+  :strategy - defines what to do if there are conflicts between the migrations
+              applied to the data store, and the migrations that need to be
+              applied. The default strategy is ragtime.strategy/raise-error.
+
+  :reporter - a function that takes three arguments: the store, the operation
+              (:up or :down) and the migration ID. The reporter is a
+              side-effectful callback that can be used to print or report on
+              the migrations as they are applied. The default reporter is
+              ragtime.reporter/silent."
   ([store index migrations]
    (migrate-all store index migrations {}))
   ([store index migrations options]
@@ -53,7 +64,9 @@
 (defn rollback-last
   "Rollback the last n migrations from the database, using the supplied
   migration index. If n is not specified, only the very last migration is
-  rolled back."
+  rolled back.
+
+  Takes an option map that may include the :reporter key. See migrate-all."
   ([store index]
    (rollback-last store index 1))
   ([store index n]
@@ -65,7 +78,9 @@
        (rollback store migration)))))
 
 (defn rollback-to
-  "Rollback to a specific migration ID, using the supplied migration index."
+  "Rollback to a specific migration ID, using the supplied migration index.
+
+  Takes an option map that may include the :reporter key. See migrate-all."
   ([store index migration-id]
    (rollback-to store index migration-id {}))
   ([store index migration-id options]
