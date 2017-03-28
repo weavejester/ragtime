@@ -1,3 +1,12 @@
+## 0.7.0 (2017-03-28)
+
+* Renamed `ragtime/ragtime.core` project to `ragtime/core`
+* Renamed `ragtime/ragtime.jdbc` project to `ragtime/jdbc`
+* Changed `ragtime.core` functions to use option maps
+* Replaced `Exception` instances with more detailed `ex-info` exceptions
+* Moved reporter callback from `ragtime.repl` to `ragtime.core`
+* Fixed JDBC migrations to always sort by `:id` (#113)
+
 ## 0.6.4 (2017-02-15)
 
 * Fixed condition check comparing migrations to discards (#114)
