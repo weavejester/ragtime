@@ -21,7 +21,7 @@
     [:a] [:a :b] [[:migrate :b]]
     [:a] [:a :b :c] [[:migrate :b] [:migrate :c]]
     [] [:a :b] [[:migrate :a] [:migrate :b]])
-  (are [a m] (thrown? Exception (raise-error a m))
+  (are [a m] (thrown? clojure.lang.ExceptionInfo (raise-error a m))
     [:a] [:b]
     [:a :b :c] [:a :d :c]))
 

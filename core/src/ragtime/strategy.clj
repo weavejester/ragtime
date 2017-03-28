@@ -35,9 +35,11 @@
   [applied migrations]
   (let [[conflicts unapplied] (split-at-conflict applied migrations)]
     (if (seq conflicts)
-      (throw (Exception.
-              (str "Conflict! Expected " (first unapplied)
-                   " but " (first conflicts) " was applied.")))
+      (throw (ex-info (str "Conflict! Expected " (first unapplied)
+                           " but " (first conflicts) " was applied.")
+                      {:reason   ::migration-conflict
+                       :expected (first unapplied)
+                       :found    (first conflicts)}))
       (for [m unapplied] [:migrate m]))))
 
 (defn rebase

@@ -103,7 +103,8 @@
         assoc-z    (assoc-migration "assoc-z" :z 3)
         migrations [assoc-x assoc-y assoc-z]]
     (migrate-all database {} migrations)
-    (is (thrown? Exception (rollback-to database (into-index migrations) "assoc-not-exists")))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (rollback-to database (into-index migrations) "assoc-not-exists")))
     (is (= (:x @(:data database)) 1))
     (is (= (:y @(:data database)) 2))
     (is (= (:z @(:data database)) 3))

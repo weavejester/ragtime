@@ -74,7 +74,10 @@
          discards   (->> (reverse migrations)
                          (take-while #(not= (p/id %) migration-id)))]
      (if (= (count discards) (count migrations))
-       (throw (Exception. (str "Could not find migration '" migration-id "' in database")))
+       (throw (ex-info (str "Could not find migration '" migration-id "' in data store")
+                       {:reason       ::migration-not-found
+                        :store        store
+                        :migration-id migration-id}))
        (doseq [migration discards]
          (reporter store :down (p/id migration))
          (rollback store migration))))))
