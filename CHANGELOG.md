@@ -1,3 +1,7 @@
+## 0.7.1 (2017-04-02)
+
+* Added `ragtime.jdbc.migrtion/create-table` function
+
 ## 0.7.0 (2017-03-28)
 
 * Renamed `ragtime/ragtime.core` project to `ragtime/core`
