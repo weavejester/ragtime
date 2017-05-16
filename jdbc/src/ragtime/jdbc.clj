@@ -16,20 +16,27 @@
                         [[:id "varchar(255)"]
                          [:created_at "varchar(32)"]]))
 
-(defn- get-table-names* [conn]
+(defn- get-table-metadata* [conn]
   (-> conn
       (.getMetaData)
       (.getTables (.getCatalog conn) nil "%" nil)
-      (sql/metadata-result {:row-fn :table_name})))
+      (sql/metadata-result)))
 
-(defn- get-table-names [db-spec]
+(defn- get-table-metadata [db-spec]
   (if-let [conn (sql/db-find-connection db-spec)]
-    (get-table-names* conn)
+    (get-table-metadata* conn)
     (with-open [conn (sql/get-connection db-spec)]
-      (get-table-names* conn))))
+      (get-table-metadata* conn))))
+
+(defn- metadata-matches-table? [^String table-name metadata]
+  (.equalsIgnoreCase table-name
+                     (if (.contains table-name ".")
+                       (str (:table_schem metadata) "." (:table_name metadata))
+                       (:table_name metadata))))
 
 (defn- table-exists? [db-spec ^String table-name]
-  (some #(.equalsIgnoreCase table-name %) (get-table-names db-spec)))
+  (some (partial metadata-matches-table? table-name)
+        (get-table-metadata db-spec)))
 
 (defn- ensure-migrations-table-exists [db-spec migrations-table]
   (when-not (table-exists? db-spec migrations-table)
