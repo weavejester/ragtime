@@ -26,7 +26,15 @@
                               {:migrations-table "migrations"})]
     (p/add-migration-id db "12")
     (is (= ["12"]
-           (sql/query (:db-spec db) ["SELECT * FROM migrations"] {:row-fn :id})))))
+           (sql/query (:db-spec db) ["SELECT * FROM migrations"] {:row-fn :id}))))
+
+  (sql/execute! db-spec "CREATE SCHEMA myschema")
+  (let [db (jdbc/sql-database db-spec
+                              {:migrations-table "myschema.migrations"})]
+    (p/add-migration-id db "20")
+    (p/add-migration-id db "21")
+    (is (= ["20" "21"]
+           (sql/query (:db-spec db) ["SELECT * FROM myschema.migrations"] {:row-fn :id})))))
 
 (defn table-names [db]
   (set (sql/query (:db-spec db) ["SHOW TABLES"] {:row-fn :table_name})))
