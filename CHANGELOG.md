@@ -1,3 +1,7 @@
+## 0.7.2 (2017-09-11)
+
+* Fixed table creation when table has schema (#118)
+
 ## 0.7.1 (2017-04-02)
 
 * Added `ragtime.jdbc.migrtion/create-table` function
