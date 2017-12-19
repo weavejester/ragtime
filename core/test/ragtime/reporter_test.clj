@@ -6,5 +6,7 @@
   (is (= (with-out-str (reporter/silent nil :up "foo")) "")))
 
 (deftest print-reporter-test
-  (is (= (with-out-str (reporter/print nil :up "foo"))   "Applying foo\n"))
-  (is (= (with-out-str (reporter/print nil :down "foo")) "Rolling back foo\n")))
+  (is (= (with-out-str (reporter/print nil :up "foo"))
+         (format "Applying foo%n")))
+  (is (= (with-out-str (reporter/print nil :down "foo"))
+         (format "Rolling back foo%n"))))

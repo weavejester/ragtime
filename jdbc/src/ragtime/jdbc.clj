@@ -7,8 +7,7 @@
             [clojure.string :as str]
             [ragtime.protocols :as p]
             [resauce.core :as resauce])
-  (:import [java.io File]
-           [java.text SimpleDateFormat]
+  (:import [java.text SimpleDateFormat]
            [java.util Date]))
 
 (defn- migrations-table-ddl [table-name]
@@ -94,7 +93,7 @@
 (defn- file-extension [file]
   (re-find #"\.[^.]*$" (str file)))
 
-(let [pattern (re-pattern (str "([^\\" File/separator "]*)\\" File/separator "?$"))]
+(let [pattern (re-pattern (str "([^\\/]*)\\/?$"))]
   (defn- basename [file]
     (second (re-find pattern (str file)))))
 
@@ -141,7 +140,7 @@
 (defn load-directory
   "Load a collection of Ragtime migrations from a directory."
   [path]
-  (load-all-files (file-seq (io/file path))))
+  (load-all-files (map #(.toURI %) (file-seq (io/file path)))))
 
 (defn load-resources
   "Load a collection of Ragtime migrations from a classpath prefix."
