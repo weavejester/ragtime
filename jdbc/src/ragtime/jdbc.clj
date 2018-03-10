@@ -85,11 +85,26 @@
   (run-up!   [_ db] (execute-sql! (:db-spec db) up))
   (run-down! [_ db] (execute-sql! (:db-spec db) down)))
 
+(defn- execute-clj! [db-spec clj-fn]
+  (clj-fn db-spec))
+
+(defrecord CljMigration [id up down]
+  p/Migration
+  (id [_] id)
+  (run-up!   [_ db] (execute-clj! (:db-spec db) up))
+  (run-down! [_ db] (execute-clj! (:db-spec db) down)))
+
 (defn sql-migration
   "Create a Ragtime migration from a map with a unique :id, and :up and :down
   keys that map to ordered collection of SQL strings."
   [migration-map]
   (map->SqlMigration migration-map))
+
+(defn clj-migration
+  "Create a Ragtime migration from a map with a unique :id, and :up and :down
+  keys that map to clojure migration function."
+  [migration-map]
+  (map->CljMigration migration-map))
 
 (defn- file-extension [file]
   (re-find #"\.[^.]*$" (str file)))
@@ -131,6 +146,28 @@
        {:id   (basename id)
         :up   (vec (mapcat read-sql (sort-by str up)))
         :down (vec (mapcat read-sql (sort-by str down)))}))))
+
+(defn clj-file->ns-name [file-content]
+  (-> (re-seq #"(?m)^(?:.+ns\s)(.*)$" file-content)
+      first
+      second))
+
+(defn- resolve-fn! [namespace-symbol fn-symbol]
+  (or (ns-resolve namespace-symbol fn-symbol)
+      (throw (Exception. (format "Could not resolve %s/%s on the classpath"
+                                 (name namespace-symbol)
+                                 (name fn-symbol))))))
+
+(defmethod load-files ".clj" [files]
+  (for [file files]
+    (let [ns-sym  (-> file slurp clj-file->ns-name symbol)
+          _       (require ns-sym)
+          up-fn   (resolve-fn! ns-sym 'up)
+          down-fn (resolve-fn! ns-sym 'down)
+          id      (-> file basename remove-extension)]
+      (clj-migration {:id   id
+                      :up   up-fn
+                      :down down-fn}))))
 
 (defn- load-all-files [files]
   (->> (group-by file-extension files)

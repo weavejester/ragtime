@@ -62,9 +62,9 @@
         ms  (jdbc/load-directory "test/migrations")
         idx (core/into-index ms)]
     (core/migrate-all db idx ms)
-    (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ" "QUZA" "QUZB" "QUXA" "QUXB" "LAST_TABLE"}
+    (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ" "QUZA" "QUZB" "QUXA" "QUXB" "LAST_TABLE" "CLJT_1" "CLJT_2"}
            (table-names db)))
-    (is (= ["001-test" "002-bar" "003-test" "004-test" "005-test" "006-test"]
+    (is (= ["001-test" "002-bar" "003-test" "004-test" "005-test" "006-test" "007_test" "008_test"]
            (p/applied-migration-ids db)))
     (core/rollback-last db idx (count ms))
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))
@@ -75,9 +75,9 @@
         ms  (jdbc/load-resources "migrations")
         idx (core/into-index ms)]
     (core/migrate-all db idx ms)
-    (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ" "QUZA" "QUZB" "QUXA" "QUXB" "LAST_TABLE"}
+    (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ" "QUZA" "QUZB" "QUXA" "QUXB" "LAST_TABLE" "CLJT_1" "CLJT_2"}
            (table-names db)))
-    (is (= ["001-test" "002-bar" "003-test" "004-test" "005-test" "006-test"]
+    (is (= ["001-test" "002-bar" "003-test" "004-test" "005-test" "006-test" "007_test" "008_test"]
            (p/applied-migration-ids db)))
     (core/rollback-last db idx (count ms))
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))
