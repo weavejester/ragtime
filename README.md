@@ -46,6 +46,7 @@ applying them to a SQL database.
 * [SQL Migrations](https://github.com/weavejester/ragtime/wiki/SQL-Migrations)
 * [Leiningen Integration](https://github.com/weavejester/ragtime/wiki/Leiningen-Integration)
 * [API docs](http://weavejester.github.io/ragtime)
+* [Third-party Libraries](https://github.com/weavejester/ragtime/wiki/Third-party-Libraries)
 
 ## License
 
