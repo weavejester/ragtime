@@ -28,6 +28,13 @@
   (let [unapplied (remove (set applied) migrations)]
     (for [m unapplied] [:migrate m])))
 
+(defn- throw-conflict-exception [conflicts unapplied]
+  (throw (ex-info (str "Conflict! Expected " (first unapplied)
+                       " but " (first conflicts) " was applied.")
+                  {:reason   ::migration-conflict
+                   :expected (first unapplied)
+                   :found    (first conflicts)})))
+
 (defn raise-error
   "A strategy that raises an error if there are any conflicts between the
   applied migrations and the defined migration list. This is useful for
@@ -35,11 +42,7 @@
   [applied migrations]
   (let [[conflicts unapplied] (split-at-conflict applied migrations)]
     (if (seq conflicts)
-      (throw (ex-info (str "Conflict! Expected " (first unapplied)
-                           " but " (first conflicts) " was applied.")
-                      {:reason   ::migration-conflict
-                       :expected (first unapplied)
-                       :found    (first conflicts)}))
+      (throw-conflict-exception conflicts unapplied)
       (for [m unapplied] [:migrate m]))))
 
 (defn rebase
@@ -51,3 +54,19 @@
     (concat
      (for [c (reverse conflicts)] [:rollback c])
      (for [m unapplied] [:migrate m]))))
+
+(defn ignore-future
+  "A strategy that raises an error if there are any conflicts between the
+  applied migrations and the defined migration list, unless the conflicts are
+  just future migrations.
+
+  This is useful for blue/green deployments where the new
+  version of the application has applied some migrations that the old version is not
+  aware of. With this strategy, the old version expects that some migrations may exists
+  that it is not aware of."
+  [applied migrations]
+  (let [[conflicts unapplied] (split-at-conflict applied migrations)]
+    (if (and (seq conflicts)
+             (seq unapplied))
+      (throw-conflict-exception conflicts unapplied)
+      (for [m unapplied] [:migrate m]))))
