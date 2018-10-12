@@ -77,7 +77,7 @@
 
 (defn- execute-sql! [db-spec statements]
   (doseq [s statements]
-    (sql/execute! db-spec [s])))
+    (sql/execute! db-spec (if (string? s) [s] s))))
 
 (defrecord SqlMigration [id up down]
   p/Migration
