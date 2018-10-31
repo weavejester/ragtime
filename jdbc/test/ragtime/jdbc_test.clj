@@ -39,23 +39,38 @@
 (defn table-names [db]
   (set (sql/query (:db-spec db) ["SHOW TABLES"] {:row-fn :table_name})))
 
-(defn test-sql-migration [db-spec]
+(defn test-sql-migration [db-spec migration-extras]
   (let [db (jdbc/sql-database db-spec)
-        m  (jdbc/sql-migration {:id   "01"
-                                :up   ["CREATE TABLE foo (id int)"]
-                                :down ["DROP TABLE foo"]})]
+        m  (jdbc/sql-migration
+            (merge {:id   "01"
+                    :up   ["CREATE TABLE foo (id int)"]
+                    :down ["DROP TABLE foo"]}
+                   migration-extras))]
     (core/migrate db m)
     (is (= #{"RAGTIME_MIGRATIONS" "FOO"} (table-names db)))
     (core/rollback db m)
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))))
 
 (deftest test-sql-migration-using-db-spec
-  (test-sql-migration db-spec))
+  (test-sql-migration db-spec {}))
+
+(deftest test-sql-migration-without-transaction
+  (test-sql-migration db-spec { :transactions false }))
+
+(deftest test-sql-migration-with-up-transaction
+  (test-sql-migration db-spec { :transactions :up }))
+
+(deftest test-sql-migration-with-down-transaction
+  (test-sql-migration db-spec { :transactions :down }))
+
+(deftest test-sql-migration-with-both-transaction
+  (test-sql-migration db-spec { :transactions :both })
+  (test-sql-migration db-spec { :transactions true }))
 
 (deftest test-sql-migration-using-db-spec-with-existing-connection
   (sql/with-db-connection
     [conn db-spec]
-    (test-sql-migration conn)))
+    (test-sql-migration conn {})))
 
 (deftest test-load-directory
   (let [db  (jdbc/sql-database db-spec)

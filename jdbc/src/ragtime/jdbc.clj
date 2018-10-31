@@ -75,15 +75,21 @@
   ([db-spec options]
    (->SqlDatabase db-spec (:migrations-table options "ragtime_migrations"))))
 
-(defn- execute-sql! [db-spec statements]
+(defn- execute-sql! [db-spec statements transaction?]
   (doseq [s statements]
-    (sql/execute! db-spec [s])))
+    (sql/execute! db-spec [s] {:transaction? transaction?})))
 
-(defrecord SqlMigration [id up down]
+(defrecord SqlMigration [id up down transactions]
   p/Migration
   (id [_] id)
-  (run-up!   [_ db] (execute-sql! (:db-spec db) up))
-  (run-down! [_ db] (execute-sql! (:db-spec db) down)))
+  (run-up! [_ db]
+    (execute-sql! (:db-spec db)
+                  up
+                  (contains? #{:up :both true} transactions)))
+  (run-down! [_ db]
+    (execute-sql! (:db-spec db)
+                  down
+                  (contains? #{:down :both true} transactions))))
 
 (defn sql-migration
   "Create a Ragtime migration from a map with a unique :id, and :up and :down
@@ -114,6 +120,7 @@
     (-> (slurp file)
         (edn/read-string)
         (update-in [:id] #(or % (-> file basename remove-extension)))
+        (update-in [:transactions] (fnil identity :both))
         (sql-migration))))
 
 (defn- sql-file-parts [file]
