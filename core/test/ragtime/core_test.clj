@@ -119,12 +119,12 @@
     (is (= (with-out-str
              (migrate-all database {} migrations
                           {:strategy strategy/rebase, :reporter reporter/print}))
-           "Applying assoc-x\nApplying assoc-y\n"))
+           (format "Applying assoc-x%nApplying assoc-y%n")))
     (is (= (with-out-str
              (rollback-to database (into-index migrations) "assoc-x"
                           {:reporter reporter/print}))
-           "Rolling back assoc-y\n"))
+           (format "Rolling back assoc-y%n")))
     (is (= (with-out-str
              (rollback-last database (into-index migrations) 1
                             {:reporter reporter/print}))
-           "Rolling back assoc-x\n"))))
+           (format "Rolling back assoc-x%n")))))

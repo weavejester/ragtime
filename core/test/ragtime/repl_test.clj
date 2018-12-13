@@ -14,24 +14,25 @@
         config   {:datastore database :migrations migrations}]
     (is (= @(:data database) {:migrations #{}}))
     (is (= (with-out-str (repl/migrate config))
-           "Applying a\nApplying b\nApplying c\n"))
+           (format "Applying a%nApplying b%nApplying c%n")))
     (is (= 1 (-> database :data deref :a)))
     (is (= 2 (-> database :data deref :b)))
     (is (= 3 (-> database :data deref :c)))
     (is (= (with-out-str (repl/rollback config))
-           "Rolling back c\n"))
+           (format "Rolling back c%n")))
     (is (= 1 (-> database :data deref :a)))
     (is (= 2 (-> database :data deref :b)))
     (is (nil? (-> database :data deref :c)))
     (is (= (with-out-str (repl/rollback config 2))
-           "Rolling back b\nRolling back a\n"))
+           (format "Rolling back b%nRolling back a%n")))
     (is (nil? (-> database :data deref :a)))
     (is (nil? (-> database :data deref :b)))
     (is (nil? (-> database :data deref :c)))
     (is (= (with-out-str
              (repl/migrate config)
              (repl/rollback config "a"))
-           "Applying a\nApplying b\nApplying c\nRolling back c\nRolling back b\n"))
+           (str (format "Applying a%nApplying b%nApplying c%n")
+                (format "Rolling back c%nRolling back b%n"))))
     (is (= 1 (-> database :data deref :a)))
     (is (nil? (-> database :data deref :b)))
     (is (nil? (-> database :data deref :c)))))
@@ -43,9 +44,9 @@
                   :reporter (fn [ds op id] (prn (type ds) op id))}]
     (is (= @(:data database) {:migrations #{}}))
     (is (= (with-out-str (repl/migrate config))
-           (str "ragtime.core_test.InMemoryDB :up \"a\"\n"
-                "ragtime.core_test.InMemoryDB :up \"b\"\n"
-                "ragtime.core_test.InMemoryDB :up \"c\"\n")))))
+           (str (format "ragtime.core_test.InMemoryDB :up \"a\"%n")
+                (format "ragtime.core_test.InMemoryDB :up \"b\"%n")
+                (format "ragtime.core_test.InMemoryDB :up \"c\"%n"))))))
 
 (deftest test-conflict-error
   (let [database            (in-memory-db)
