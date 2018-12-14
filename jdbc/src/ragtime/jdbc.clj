@@ -130,13 +130,13 @@
 
 (defn- sql-file-transactions [sql-migration-map]
   (let [{:keys [up down]} sql-migration-map
-        is-up-transaction (-> up first (clojure.string/starts-with? "--transaction"))
-        is-down-transaction (-> down first (clojure.string/starts-with? "--transaction"))
+        is-up-transaction (-> up first (clojure.string/starts-with? "--transaction-off"))
+        is-down-transaction (-> down first (clojure.string/starts-with? "--transaction-off"))
         transactions (case [is-up-transaction is-down-transaction]
-                       [true true] :both
-                       [true false] :up
-                       [false true] :down
-                       false)]
+                       [true true] :false
+                       [true false] :down
+                       [false true] :up
+                       :both)]
     (assoc sql-migration-map :transactions transactions)))
 
 (defmethod load-files ".sql" [files]
