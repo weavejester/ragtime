@@ -76,6 +76,7 @@
 
 (defn- execute-sql! [db-spec statements transaction?]
   (doseq [s statements]
+    (println "sql:" s ", transaction:" transaction?)
     (sql/execute! db-spec [s] {:transaction? transaction?})))
 
 (defrecord SqlMigration [id up down transactions]
@@ -133,7 +134,7 @@
         is-up-transaction (-> up first (clojure.string/starts-with? "--transaction-off"))
         is-down-transaction (-> down first (clojure.string/starts-with? "--transaction-off"))
         transactions (case [is-up-transaction is-down-transaction]
-                       [true true] :false
+                       [true true] false
                        [true false] :down
                        [false true] :up
                        :both)]
@@ -148,6 +149,7 @@
        {:id   (basename id)
         :up   (vec (mapcat read-sql (sort-by str up)))
         :down (vec (mapcat read-sql (sort-by str down)))}
+       sql-file-transactions
        sql-migration))))
 
 (defn- load-all-files [files]
