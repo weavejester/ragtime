@@ -1,3 +1,9 @@
+## 0.8.0 (2018-12-15)
+
+* Fixed SQL file migration IDs under windows (#121)
+* Added `ragtime.strategy/ignore-future` (#129)
+* Added support for turning off transactions in JDBC migrations (#124)
+
 ## 0.7.2 (2017-09-11)
 
 * Fixed table creation when table has schema (#118)
