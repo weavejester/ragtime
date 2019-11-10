@@ -7,7 +7,9 @@
             [clojure.string :as str]
             [ragtime.protocols :as p]
             [resauce.core :as resauce])
-  (:import [java.text SimpleDateFormat]
+  (:import [java.io File] 
+           [java.sql Connection]
+           [java.text SimpleDateFormat]
            [java.util Date]))
 
 (defn- migrations-table-ddl [table-name]
@@ -15,7 +17,7 @@
                         [[:id "varchar(255)"]
                          [:created_at "varchar(32)"]]))
 
-(defn- get-table-metadata* [conn]
+(defn- get-table-metadata* [^Connection conn]
   (-> conn
       (.getMetaData)
       (.getTables (.getCatalog conn) nil "%" nil)
@@ -41,7 +43,7 @@
   (when-not (table-exists? db-spec migrations-table)
     (sql/execute! db-spec [(migrations-table-ddl migrations-table)])))
 
-(defn- format-datetime [dt]
+(defn- format-datetime [^Date dt]
   (-> (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS")
       (.format dt)))
 
@@ -147,7 +149,7 @@
 (defn load-directory
   "Load a collection of Ragtime migrations from a directory."
   [path]
-  (load-all-files (map #(.toURI %) (file-seq (io/file path)))))
+  (load-all-files (map #(.toURI ^File %) (file-seq (io/file path)))))
 
 (defn load-resources
   "Load a collection of Ragtime migrations from a classpath prefix."
