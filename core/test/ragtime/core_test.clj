@@ -10,12 +10,12 @@
   (add-migration-id [_ id]
     (swap! data update-in [:migrations] conj id))
   (remove-migration-id [_ id]
-    (swap! data update-in [:migrations] disj id))
+    (swap! data update-in [:migrations] (partial filterv #(not= % id))))
   (applied-migration-ids [_]
     (seq (:migrations @data))))
 
 (defn in-memory-db []
-  (InMemoryDB. (atom {:migrations #{}})))
+  (InMemoryDB. (atom {:migrations []})))
 
 (defn assoc-migration [id key val]
   (reify p/Migration

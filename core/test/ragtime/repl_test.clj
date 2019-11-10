@@ -12,7 +12,7 @@
 (deftest test-repl-functions
   (let [database (in-memory-db)
         config   {:datastore database :migrations migrations}]
-    (is (= @(:data database) {:migrations #{}}))
+    (is (= @(:data database) {:migrations []}))
     (is (= (with-out-str (repl/migrate config))
            (format "Applying a%nApplying b%nApplying c%n")))
     (is (= 1 (-> database :data deref :a)))
@@ -42,7 +42,7 @@
         config   {:datastore database
                   :migrations migrations
                   :reporter (fn [ds op id] (prn (type ds) op id))}]
-    (is (= @(:data database) {:migrations #{}}))
+    (is (= @(:data database) {:migrations []}))
     (is (= (with-out-str (repl/migrate config))
            (str (format "ragtime.core_test.InMemoryDB :up \"a\"%n")
                 (format "ragtime.core_test.InMemoryDB :up \"b\"%n")
