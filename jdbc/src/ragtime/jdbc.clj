@@ -18,10 +18,10 @@
                          [:created_at "varchar(32)"]]))
 
 (defn- get-table-metadata* [^Connection conn]
-  (-> conn
-      (.getMetaData)
-      (.getTables (.getCatalog conn) nil "%" nil)
-      (sql/metadata-result)))
+  (with-open [tables (-> conn
+                         (.getMetaData)
+                         (.getTables (.getCatalog conn) nil "%" nil))]
+    (sql/metadata-result tables)))
 
 (defn- get-table-metadata [db-spec]
   (if-let [conn (sql/db-find-connection db-spec)]
