@@ -1,3 +1,9 @@
+## 0.8.1 (2021-03-05)
+
+* Fixed reflection warnings (#139)
+* Fixed table metadata resultset not being closed (#143)
+* Fixed test memory database ordering (#138)
+
 ## 0.8.0 (2018-12-15)
 
 * Fixed SQL file migration IDs under windows (#121)
