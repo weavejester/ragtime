@@ -7,6 +7,6 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/java.jdbc "0.5.8"]
                  [ragtime/core "0.8.1"]
-                 [resauce "0.1.0"]]
+                 [resauce "0.2.0"]]
   :profiles
   {:dev {:dependencies [[com.h2database/h2 "1.3.160"]]}})
