@@ -29,7 +29,7 @@
 (deftest rebase-test
   (are [a m r] (= (rebase a m) r)
     [:a] [:a] []
-    [] [] []   
+    [] [] []
     [:a :b] [:a :b] []
     [:a] [:a :b] [[:migrate :b]]
     [:a] [:a :b :c] [[:migrate :b] [:migrate :c]]
