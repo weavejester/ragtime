@@ -55,17 +55,17 @@
   (test-sql-migration db-spec {}))
 
 (deftest test-sql-migration-without-transaction
-  (test-sql-migration db-spec { :transactions false }))
+  (test-sql-migration db-spec {:transactions false}))
 
 (deftest test-sql-migration-with-up-transaction
-  (test-sql-migration db-spec { :transactions :up }))
+  (test-sql-migration db-spec {:transactions :up}))
 
 (deftest test-sql-migration-with-down-transaction
-  (test-sql-migration db-spec { :transactions :down }))
+  (test-sql-migration db-spec {:transactions :down}))
 
 (deftest test-sql-migration-with-both-transaction
-  (test-sql-migration db-spec { :transactions :both })
-  (test-sql-migration db-spec { :transactions true }))
+  (test-sql-migration db-spec {:transactions :both})
+  (test-sql-migration db-spec {:transactions true}))
 
 (deftest test-sql-migration-using-db-spec-with-existing-connection
   (sql/with-db-connection

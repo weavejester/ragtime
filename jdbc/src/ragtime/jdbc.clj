@@ -7,7 +7,7 @@
             [clojure.string :as str]
             [ragtime.protocols :as p]
             [resauce.core :as resauce])
-  (:import [java.io File] 
+  (:import [java.io File]
            [java.sql Connection]
            [java.text SimpleDateFormat]
            [java.util Date]))
