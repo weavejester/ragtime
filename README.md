@@ -11,9 +11,13 @@ for expressing web applications.
 
 ## Installation
 
-Add the following dependency to your project file:
+Add the following dependency to your deps.edn file:
 
-    [ragtime "0.8.1"]
+    dev.weavejester/ragtime {:mvn/version "0.8.1"}
+
+Or to your Leiningen project file:
+
+    [dev.weavejester/ragtime "0.8.1"]
 
 ## Overview
 
@@ -53,4 +57,4 @@ applying them to a SQL database.
 Copyright © 2021 James Reeves
 
 Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+your option) any later version
