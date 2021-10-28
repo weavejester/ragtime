@@ -4,9 +4,10 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[ragtime/core "0.8.1"]
-                 [ragtime/jdbc "0.8.1"]]
+                 [ragtime/jdbc "0.8.1"]
+                 [ragtime/next.jdbc "0.8.1"]]
   :plugins [[lein-sub "0.3.0"]
             [lein-codox "0.10.3"]]
-  :sub ["core" "jdbc"]
+  :sub ["core" "jdbc" "next.jdbc"]
   :codox {:source-paths ["core/src" "jdbc/src"]
           :output-path  "codox"})
