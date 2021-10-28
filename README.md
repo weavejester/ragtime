@@ -13,11 +13,11 @@ for expressing web applications.
 
 Add the following dependency to your deps.edn file:
 
-    dev.weavejester/ragtime {:mvn/version "0.8.1"}
+    dev.weavejester/ragtime {:mvn/version "0.9.0"}
 
 Or to your Leiningen project file:
 
-    [dev.weavejester/ragtime "0.8.1"]
+    [dev.weavejester/ragtime "0.9.0"]
 
 ## Overview
 

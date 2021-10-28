@@ -1,3 +1,8 @@
+## 0.9.0 (2021-10-28)
+
+* Changed project group name to dev.weavejester
+* Added library to support next.jdbc (#147)
+
 ## 0.8.1 (2021-03-05)
 
 * Fixed reflection warnings (#139)
