@@ -8,6 +8,6 @@
                  [dev.weavejester/ragtime.next-jdbc "0.9.0"]]
   :plugins [[lein-sub "0.3.0"]
             [lein-codox "0.10.3"]]
-  :sub ["core" "jdbc" "next.jdbc"]
+  :sub ["core" "jdbc" "next-jdbc"]
   :codox {:source-paths ["core/src" "jdbc/src"]
           :output-path  "codox"})
