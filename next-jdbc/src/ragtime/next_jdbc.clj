@@ -11,27 +11,47 @@
             [ragtime.protocols :as p]
             [resauce.core :as resauce])
   (:import [java.io File]
-           [java.sql Connection]
+           [java.sql Connection DatabaseMetaData]
            [java.text SimpleDateFormat]
-           [java.util Date]))
+           [java.util Date]
+           [java.util.regex Pattern]))
 
-;; Returns unqualified maps as some databases (e.g. Oracle) can only return them
-(defn- get-table-metadata* [^Connection c]
-  (-> (.getMetaData c)
-      (.getTables (.getCatalog c) nil nil (into-array ["TABLE"]))
-      (rs/datafiable-result-set c {:builder-fn rs/as-unqualified-lower-maps})))
+(defn- get-table-metadata [^DatabaseMetaData metadata ^Connection conn]
+  (-> metadata
+      (.getTables (.getCatalog conn) nil nil (into-array ["TABLE"]))
+      ;; Returns unqualified maps as some databases (e.g. Oracle) can only return them
+      (rs/datafiable-result-set conn {:builder-fn rs/as-unqualified-lower-maps})))
 
-(defn- get-table-metadata [datasource]
+(defn- get-identifier-quote [^DatabaseMetaData metadata]
+  (let [quote-char (.getIdentifierQuoteString metadata)]
+    (when (not= quote-char " ")
+      quote-char)))
+
+(defn- get-db-metadata* [^Connection c]
+  (let [metadata (.getMetaData c)]
+    {:tables (get-table-metadata metadata c)
+     :quote  (get-identifier-quote metadata)}))
+
+(defn- get-db-metadata [datasource]
   (cond
     (instance? java.sql.Connection datasource)
-    (get-table-metadata* datasource)
+    (get-db-metadata* datasource)
 
     (next.jdbc.default-options/wrapped-connection? datasource)
-    (get-table-metadata* (:connectable datasource))
+    (get-db-metadata* (:connectable datasource))
 
     :else
     (with-open [conn (jdbc/get-connection datasource)]
-      (get-table-metadata* conn))))
+      (get-db-metadata* conn))))
+
+(defn- unquote-table-name [quote-char table-name]
+  ;; Remove db quote around the schema and table name; ex.: "\"schema\".\"table\""
+  (if quote-char
+    (let [re (->> (Pattern/quote quote-char)
+                  (format "^%1$s|%1$s(?=\\.)|(?<=\\.)%1$s|%1$s$")
+                  (re-pattern))]
+      (str/replace table-name re ""))
+    table-name))
 
 (defn- metadata-matches-table?
   [^String table-name {:keys [table_schem table_name]}]
@@ -41,8 +61,10 @@
                        table_name)))
 
 (defn- table-exists? [datasource ^String table-name]
-  (some (partial metadata-matches-table? table-name)
-    (get-table-metadata datasource)))
+  (let [{:keys [tables quote]} (get-db-metadata datasource)
+        table-name-unquoted    (unquote-table-name quote table-name)]
+    (some (partial metadata-matches-table? table-name-unquoted)
+          tables)))
 
 (defn- ensure-migrations-table-exists [datasource migrations-table]
   (when-not (table-exists? datasource migrations-table)
