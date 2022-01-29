@@ -37,7 +37,19 @@
     (p/add-migration-id db "21")
     (is (= ["20" "21"]
            (map :MIGRATIONS/ID (n.j/execute! (:datasource db)
-                                 ["SELECT * FROM myschema.migrations"]))))))
+                                 ["SELECT * FROM myschema.migrations"])))))
+  
+  (testing "quoted table names"
+    ;; Note: unquoted names are automatically upper-cased by the DB
+    ;;       while quoted ones are case-sensitive and used exactly as given
+    (n.j/execute! datasource ["CREATE SCHEMA MYSCHEMA2"])
+    (let [db (jdbc/sql-database datasource
+               {:migrations-table "\"MYSCHEMA2\".\"MIGRATIONS\""})]      
+      (p/add-migration-id db "30")
+      (p/add-migration-id db "31")
+      (is (= ["30" "31"]
+             (map :MIGRATIONS/ID (n.j/execute! (:datasource db)
+                                   ["SELECT * FROM myschema2.migrations"])))))))
 
 (defn table-names [db]
   (set (map :TABLES/TABLE_NAME (sql/query (:datasource db) ["SHOW TABLES"]))))
