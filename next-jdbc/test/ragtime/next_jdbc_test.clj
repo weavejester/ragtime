@@ -24,32 +24,34 @@
 
 (deftest test-migrations-table
   (let [db (jdbc/sql-database datasource
-             {:migrations-table "migrations"})]
+                              {:migrations-table "migrations"})]
     (p/add-migration-id db "12")
     (is (= ["12"]
-           (map :MIGRATIONS/ID (sql/query (:datasource db)
-                                 ["SELECT * FROM migrations"])))))
+           (->> ["SELECT * FROM migrations"]
+                (sql/query (:datasource db))
+                (map :MIGRATIONS/ID)))))
 
-  (n.j/execute! datasource ["CREATE SCHEMA myschema"])
+  (n.j/execute! datasource ["CREATE SCHEMA foo"])
   (let [db (jdbc/sql-database datasource
-             {:migrations-table "myschema.migrations"})]
+                              {:migrations-table "foo.migrations"})]
     (p/add-migration-id db "20")
     (p/add-migration-id db "21")
     (is (= ["20" "21"]
-           (map :MIGRATIONS/ID (n.j/execute! (:datasource db)
-                                 ["SELECT * FROM myschema.migrations"])))))
-  
-  (testing "quoted table names"
-    ;; Note: unquoted names are automatically upper-cased by the DB
-    ;;       while quoted ones are case-sensitive and used exactly as given
-    (n.j/execute! datasource ["CREATE SCHEMA MYSCHEMA2"])
-    (let [db (jdbc/sql-database datasource
-               {:migrations-table "\"MYSCHEMA2\".\"MIGRATIONS\""})]      
-      (p/add-migration-id db "30")
-      (p/add-migration-id db "31")
-      (is (= ["30" "31"]
-             (map :MIGRATIONS/ID (n.j/execute! (:datasource db)
-                                   ["SELECT * FROM myschema2.migrations"])))))))
+           (->> ["SELECT * FROM foo.migrations"]
+                (n.j/execute! (:datasource db))
+                (map :MIGRATIONS/ID)))))
+
+  ;; Unquoted names are automatically upper-cased by the DB while
+  ;; quoted ones are case-sensitive and used exactly as given
+  (n.j/execute! datasource ["CREATE SCHEMA BAR"])
+  (let [db (jdbc/sql-database datasource
+                              {:migrations-table "\"BAR\".\"MIGRATIONS\""})]
+    (p/add-migration-id db "30")
+    (p/add-migration-id db "31")
+    (is (= ["30" "31"]
+           (->> ["SELECT * FROM bar.migrations"]
+                (n.j/execute! (:datasource db))
+                (map :MIGRATIONS/ID))))))
 
 (defn table-names [db]
   (set (map :TABLES/TABLE_NAME (sql/query (:datasource db) ["SHOW TABLES"]))))
@@ -57,10 +59,10 @@
 (defn test-sql-migration [connectable migration-extras]
   (let [db (jdbc/sql-database connectable)
         m  (jdbc/sql-migration
-             (merge {:id   "01"
-                     :up   ["CREATE TABLE foo (id int)"]
-                     :down ["DROP TABLE foo"]}
-               migration-extras))]
+            (merge {:id   "01"
+                    :up   ["CREATE TABLE foo (id int)"]
+                    :down ["DROP TABLE foo"]}
+                   migration-extras))]
     (core/migrate db m)
     (is (= #{"RAGTIME_MIGRATIONS" "FOO"} (table-names db)))
     (core/rollback db m)

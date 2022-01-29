@@ -69,7 +69,7 @@
 (defn- ensure-migrations-table-exists [datasource migrations-table]
   (when-not (table-exists? datasource migrations-table)
     (let [sql (str "create table " migrations-table
-                " (id varchar(255), created_at varchar(32))")]
+                   " (id varchar(255), created_at varchar(32))")]
       (jdbc/execute! datasource [sql]))))
 
 (defn- format-datetime [^Date dt]
@@ -81,8 +81,8 @@
   (add-migration-id [_ id]
     (ensure-migrations-table-exists datasource migrations-table)
     (sql/insert! datasource migrations-table
-      {:id         (str id)
-       :created_at (format-datetime (Date.))}))
+                 {:id         (str id)
+                  :created_at (format-datetime (Date.))}))
 
   (remove-migration-id [_ id]
     (ensure-migrations-table-exists datasource migrations-table)
@@ -103,9 +103,9 @@
                       schema name if your DB supports that and you are not
                       using the default one (ex.: myschema.migrations)"
   ([datasource]
-    (sql-database datasource {}))
+   (sql-database datasource {}))
   ([datasource options]
-    (->SqlDatabase datasource (:migrations-table options "ragtime_migrations"))))
+   (->SqlDatabase datasource (:migrations-table options "ragtime_migrations"))))
 
 (defn- execute-sql! [datasource statements transaction?]
   (if transaction?
@@ -120,12 +120,12 @@
   (id [_] id)
   (run-up! [_ db]
     (execute-sql! (:datasource db)
-      up
-      (contains? #{:up :both true} transactions)))
+                  up
+                  (contains? #{:up :both true} transactions)))
   (run-down! [_ db]
     (execute-sql! (:datasource db)
-      down
-      (contains? #{:down :both true} transactions))))
+                  down
+                  (contains? #{:down :both true} transactions))))
 
 (defn sql-migration
   "Create a Ragtime migration from a map with a unique :id, and :up and :down
@@ -171,9 +171,9 @@
                         (sort-by key))]
     (let [{:strs [up down]} (group-by (comp second sql-file-parts) files)]
       (sql-migration
-        {:id   (basename id)
-         :up   (vec (mapcat read-sql (sort-by str up)))
-         :down (vec (mapcat read-sql (sort-by str down)))}))))
+       {:id   (basename id)
+        :up   (vec (mapcat read-sql (sort-by str up)))
+        :down (vec (mapcat read-sql (sort-by str down)))}))))
 
 (defn- load-all-files [files]
   (->> (group-by file-extension files)
