@@ -1,3 +1,7 @@
+## 0.9.1 (2022-02-09)
+
+* Fixed table lookup with quoted identifiers (#150)
+
 ## 0.9.0 (2021-10-28)
 
 * Changed project group name to dev.weavejester
