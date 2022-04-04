@@ -37,7 +37,7 @@
     (instance? java.sql.Connection datasource)
     (get-db-metadata* datasource)
 
-    (next.jdbc.default-options/wrapped-connection? datasource)
+    (instance? java.sql.Connection (:connectable datasource))
     (get-db-metadata* (:connectable datasource))
 
     :else
