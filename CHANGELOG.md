@@ -1,3 +1,7 @@
+## 0.9.2 (2022-06-15)
+
+* Fixed incompatibility with next.jdbc 1.2.772 and later (#152)
+
 ## 0.9.1 (2022-02-09)
 
 * Fixed table lookup with quoted identifiers (#150)
