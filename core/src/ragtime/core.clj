@@ -56,6 +56,10 @@
          index    (into-index index migrations)
          applied  (p/applied-migration-ids store)]
      (doseq [[action migration-id] (strategy applied (map p/id migrations))]
+       (when (.isInterrupted (Thread/currentThread))
+         (throw (InterruptedException.
+                 (str "Stopping running migrations before " migration-id
+                      " because the current thread has been interrupted"))))
        (reporter store ({:migrate :up, :rollback :down} action) migration-id)
        (case action
          :migrate  (migrate store (index migration-id))

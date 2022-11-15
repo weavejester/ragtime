@@ -23,6 +23,15 @@
     (run-up! [_ store] (swap! (:data store) assoc key val))
     (run-down! [_ store] (swap! (:data store) dissoc key))))
 
+(defn interrupted-migration []
+  (reify p/Migration
+    (id [_] "interrupted-migration")
+    (run-up! [_ store]
+      (.interrupt (Thread/currentThread))
+      (swap! (:data store) assoc :interrupted? true))
+    (run-down! [_ store]
+      (swap! (:data store) dissoc :interrupted?))))
+
 (deftest test-into-index
   (let [assoc-x (assoc-migration "assoc-x" :x 1)
         assoc-y (assoc-migration "assoc-y" :y 2)
@@ -56,6 +65,29 @@
     (is (= (:x @(:data database)) 1))
     (is (nil? (:y @(:data database))))
     (is (= (:z @(:data database)) 3))))
+
+(deftest test-migrate-all-interrupted
+  (let [database   (in-memory-db)
+        assoc-x    (assoc-migration "assoc-x" :x 1)
+        assoc-y    (assoc-migration "assoc-y" :y 2)
+        migrations [assoc-x (interrupted-migration) assoc-y]
+        exception  (volatile! nil)]
+    (doto (Thread.
+           #(try
+              (migrate-all database {} migrations {:strategy strategy/rebase})
+              (catch InterruptedException e
+                (vreset! exception e))))
+      (.start)
+      (.join))
+    (is (= ["assoc-x" "interrupted-migration"] (:migrations @(:data database))))
+    (is (= 1 (:x @(:data database)))
+        "Migration before interrupt is processed fully")
+    (is (= true (:interrupted? @(:data database)))
+        "Migration before interrupt is processed fully")
+    (is (nil? (:y @(:data database))) "Migration after interrupt is ignored")
+    (is (thrown? InterruptedException
+                 #"Stopping running migrations before assoc-y"
+                 (some-> @exception throw)))))
 
 (deftest test-migrate-all-apply-new
   "Tests migrate-all, with the apply-new strategy, in the scenario where a
