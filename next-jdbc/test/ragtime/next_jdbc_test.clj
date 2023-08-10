@@ -73,10 +73,9 @@
                 (sql/query (:datasource db))
                 (map :RAGTIME_MIGRATIONS/ID)))))
 
-  ;; SQL returns more than 1 row
-  (let [migrations-table-exists-sql "SELECT * FROM INFORMATION_SCHEMA.TABLES"
+  (let [sql-returns-more-than-1-row "SELECT * FROM INFORMATION_SCHEMA.TABLES"
         db (jdbc/sql-database datasource
-                              {:migrations-table-exists-sql migrations-table-exists-sql})]
+                              {:migrations-table-exists-sql sql-returns-more-than-1-row})]
     (is (thrown? ExceptionInfo
                  (p/add-migration-id db "12")))))
 
