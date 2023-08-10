@@ -5,7 +5,9 @@
             [ragtime.protocols :as p]
             [clojure.java.io :as io]
             [next.jdbc :as n.j]
-            [next.jdbc.sql :as sql]))
+            [next.jdbc.sql :as sql])
+  (:import
+   (clojure.lang ExceptionInfo)))
 
 (def datasource {:jdbcUrl "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1"})
 
@@ -52,6 +54,31 @@
            (->> ["SELECT * FROM bar.migrations"]
                 (n.j/execute! (:datasource db))
                 (map :MIGRATIONS/ID))))))
+
+(deftest test-migrations-table-exists-sql
+  (let [migrations-table-exists-sql (str "SELECT * FROM INFORMATION_SCHEMA.TABLES"
+                                         " WHERE TABLE_CATALOG='TESTDB'"
+                                         " AND TABLE_NAME='RAGTIME_MIGRATIONS'")
+        db (jdbc/sql-database datasource
+                              {:migrations-table-exists-sql migrations-table-exists-sql})]
+    (p/add-migration-id db "12")
+    (is (= ["12"]
+           (->> ["SELECT * FROM ragtime_migrations"]
+                (sql/query (:datasource db))
+                (map :RAGTIME_MIGRATIONS/ID))))
+
+    (p/add-migration-id db "13")
+    (is (= ["12" "13"]
+           (->> ["SELECT * FROM ragtime_migrations"]
+                (sql/query (:datasource db))
+                (map :RAGTIME_MIGRATIONS/ID)))))
+
+  ;; SQL returns more than 1 row
+  (let [migrations-table-exists-sql "SELECT * FROM INFORMATION_SCHEMA.TABLES"
+        db (jdbc/sql-database datasource
+                              {:migrations-table-exists-sql migrations-table-exists-sql})]
+    (is (thrown? ExceptionInfo
+                 (p/add-migration-id db "12")))))
 
 (defn table-names [db]
   (set (map :TABLES/TABLE_NAME (sql/query (:datasource db) ["SHOW TABLES"]))))

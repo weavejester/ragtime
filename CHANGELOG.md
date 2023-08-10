@@ -1,3 +1,7 @@
+## 0.10.0 (unreleased)
+
+* Add option `:migrations-table-exists-sql` for SQL backed migrations (#157)
+
 ## 0.9.3 (2022-11-15)
 
 * Made `migrate-all` interruptable (#154)

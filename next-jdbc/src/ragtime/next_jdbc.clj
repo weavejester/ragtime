@@ -60,14 +60,28 @@
                        (str table_schem "." table_name)
                        table_name)))
 
-(defn- table-exists? [datasource ^String table-name]
+(defn- table-exists-via-metadata-scan? [datasource ^String table-name]
   (let [{:keys [tables quote]} (get-db-metadata datasource)
         table-name-unquoted    (unquote-table-name quote table-name)]
     (some (partial metadata-matches-table? table-name-unquoted)
           tables)))
 
-(defn- ensure-migrations-table-exists [datasource migrations-table]
-  (when-not (table-exists? datasource migrations-table)
+(defn- table-exists-via-provided-sql? [datasource ^String migrations-table-exists-sql]
+  (let [row-count (count (jdbc/execute! datasource [migrations-table-exists-sql]))]
+    (case row-count
+      0 false
+      1 true
+      (throw (ex-info "Provided SQL doesn't directly answer if a migration table exists or not"
+                      {:migration-table-exists-sql migrations-table-exists-sql
+                       :returned-row-count row-count})))))
+
+(defn- table-exists? [datasource table-name migrations-table-exists-sql]
+  (if migrations-table-exists-sql
+    (table-exists-via-provided-sql? datasource migrations-table-exists-sql)
+    (table-exists-via-metadata-scan? datasource table-name)))
+
+(defn- ensure-migrations-table-exists [datasource migrations-table migrations-table-exists-sql]
+  (when-not (table-exists? datasource migrations-table migrations-table-exists-sql)
     (let [sql (str "create table " migrations-table
                    " (id varchar(255), created_at varchar(32))")]
       (jdbc/execute! datasource [sql]))))
@@ -76,20 +90,20 @@
   (-> (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS")
       (.format dt)))
 
-(defrecord SqlDatabase [datasource migrations-table]
+(defrecord SqlDatabase [datasource migrations-table migrations-table-exists-sql]
   p/DataStore
   (add-migration-id [_ id]
-    (ensure-migrations-table-exists datasource migrations-table)
+    (ensure-migrations-table-exists datasource migrations-table migrations-table-exists-sql)
     (sql/insert! datasource migrations-table
                  {:id         (str id)
                   :created_at (format-datetime (Date.))}))
 
   (remove-migration-id [_ id]
-    (ensure-migrations-table-exists datasource migrations-table)
+    (ensure-migrations-table-exists datasource migrations-table migrations-table-exists-sql)
     (sql/delete! datasource migrations-table ["id = ?" id]))
 
   (applied-migration-ids [_]
-    (ensure-migrations-table-exists datasource migrations-table)
+    (ensure-migrations-table-exists datasource migrations-table migrations-table-exists-sql)
     (let [sql [(str "SELECT id FROM " migrations-table " ORDER BY created_at")]]
       (->> (sql/query datasource sql {:builder-fn rs/as-unqualified-lower-maps})
            (map :id)))))
@@ -101,11 +115,21 @@
   :migrations-table - the name of the table to store the applied migrations
                       (defaults to ragtime_migrations). You must include the
                       schema name if your DB supports that and you are not
-                      using the default one (ex.: myschema.migrations)"
+                      using the default one (ex.: myschema.migrations)
+
+  :migrations-table-exists-sql - the SQL to execute when checking of
+                                 `:migrations-table` exists or should be created.
+                                 Defaults to `nil`. When not set, a table will be
+                                 checked via database meta data which can be slow
+                                 if the DBMS has managing large number of tables.
+                                 For more details see:
+                                 https://github.com/weavejester/ragtime/issues/157"
   ([datasource]
    (sql-database datasource {}))
   ([datasource options]
-   (->SqlDatabase datasource (:migrations-table options "ragtime_migrations"))))
+   (->SqlDatabase datasource
+                  (:migrations-table options "ragtime_migrations")
+                  (:migrations-table-exists-sql options))))
 
 (defn- execute-sql! [datasource statements transaction?]
   (if transaction?
