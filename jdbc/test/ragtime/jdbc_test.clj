@@ -36,6 +36,20 @@
     (is (= ["20" "21"]
            (sql/query (:db-spec db) ["SELECT * FROM myschema.migrations"] {:row-fn :id})))))
 
+(deftest test-migrations-table-exists-sql
+  (let [migrations-table-exists-sql (str "SELECT * FROM INFORMATION_SCHEMA.TABLES"
+                                         " WHERE TABLE_CATALOG='TESTDB'"
+                                         " AND TABLE_NAME='RAGTIME_MIGRATIONS'")
+        db (jdbc/sql-database db-spec
+                              {:migrations-table-exists-sql migrations-table-exists-sql})]
+    (p/add-migration-id db "12")
+    (is (= ["12"]
+           (sql/query (:db-spec db) ["SELECT * FROM ragtime_migrations"] {:row-fn :id})))
+
+    (p/add-migration-id db "13")
+    (is (= ["12" "13"]
+           (sql/query (:db-spec db) ["SELECT * FROM ragtime_migrations"] {:row-fn :id})))))
+
 (defn table-names [db]
   (set (sql/query (:db-spec db) ["SHOW TABLES"] {:row-fn :table_name})))
 
