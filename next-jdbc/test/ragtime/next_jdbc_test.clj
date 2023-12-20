@@ -94,9 +94,9 @@
         idx (core/into-index ms)]
     (core/migrate-all db idx ms)
     (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ"
-             "QUZA" "QUZB" "QUXA" "QUXB" "LAST_TABLE"}
+             "QUZA" "QUZB" "QUXA" "QUXB" "LAST_TABLE" "QUXC" "QUXD"}
            (table-names db)))
-    (is (= ["001-test" "002-bar" "003-test" "004-test" "005-test" "006-test"]
+    (is (= ["001-test" "002-bar" "003-test" "004-test" "005-test" "006-test" "007-test"]
            (p/applied-migration-ids db)))
     (core/rollback-last db idx (count ms))
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))
@@ -108,9 +108,9 @@
         idx (core/into-index ms)]
     (core/migrate-all db idx ms)
     (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ"
-             "QUZA" "QUZB" "QUXA" "QUXB" "LAST_TABLE"}
+             "QUZA" "QUZB" "QUXA" "QUXB" "LAST_TABLE" "QUXC" "QUXD"}
            (table-names db)))
-    (is (= ["001-test" "002-bar" "003-test" "004-test" "005-test" "006-test"]
+    (is (= ["001-test" "002-bar" "003-test" "004-test" "005-test" "006-test" "007-test"]
            (p/applied-migration-ids db)))
     (core/rollback-last db idx (count ms))
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))

@@ -128,7 +128,7 @@
   (rest (re-matches #"(.*?)\.(up|down)(?:\.(\d+))?\.sql" (str file))))
 
 (defn- read-sql [file]
-  (str/split (slurp file) #"(?m)\n\s*--;;\s*\n"))
+  (str/split (slurp file) #"(?m)\n\s*--\s?;;\s*\n"))
 
 (defmethod load-files ".sql" [files]
   (for [[id files] (->> files
