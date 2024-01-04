@@ -80,13 +80,9 @@
   :migrations-table - the name of the table to store the applied migrations
                       (defaults to ragtime_migrations)
 
-  :migrations-table-exists-sql - the SQL to execute when checking if
-                                 `:migrations-table` exists or should be created.
-                                 Defaults to `nil`. When not set, a table will be
-                                 checked via database meta data which can be slow
-                                 if the DBMS has managing large number of tables.
-                                 For more details see:
-                                 https://github.com/weavejester/ragtime/issues/157"
+  :migrations-table-exists-sql - execute SQL to check if migrations table
+                                 exists. If not set, uses database metadata,
+                                 which can be slow for large DBs."
   ([db-spec]
    (sql-database db-spec {}))
   ([db-spec options]
