@@ -35,32 +35,46 @@
                        (str (:table_schem metadata) "." (:table_name metadata))
                        (:table_name metadata))))
 
-(defn- table-exists? [db-spec ^String table-name]
+(defn- table-exists-via-metadata-scan? [db-spec ^String table-name]
   (some (partial metadata-matches-table? table-name)
         (get-table-metadata db-spec)))
 
-(defn- ensure-migrations-table-exists [db-spec migrations-table]
-  (when-not (table-exists? db-spec migrations-table)
+(defn- table-exists-via-provided-sql? [db-spec ^String migrations-table-exists-sql]
+  (let [row-count (count (sql/query db-spec [migrations-table-exists-sql]))]
+    (case row-count
+      0 false
+      1 true
+      (throw (ex-info "Provided SQL doesn't directly answer if a migration table exists or not"
+                      {:migration-table-exists-sql migrations-table-exists-sql
+                       :returned-row-count row-count})))))
+
+(defn- table-exists? [datasource table-name migrations-table-exists-sql]
+  (if migrations-table-exists-sql
+    (table-exists-via-provided-sql? datasource migrations-table-exists-sql)
+    (table-exists-via-metadata-scan? datasource table-name)))
+
+(defn- ensure-migrations-table-exists [db-spec migrations-table migrations-table-exists-sql]
+  (when-not (table-exists? db-spec migrations-table migrations-table-exists-sql)
     (sql/execute! db-spec [(migrations-table-ddl migrations-table)])))
 
 (defn- format-datetime [^Date dt]
   (-> (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS")
       (.format dt)))
 
-(defrecord SqlDatabase [db-spec migrations-table]
+(defrecord SqlDatabase [db-spec migrations-table migrations-table-exists-sql]
   p/DataStore
   (add-migration-id [_ id]
-    (ensure-migrations-table-exists db-spec migrations-table)
+    (ensure-migrations-table-exists db-spec migrations-table migrations-table-exists-sql)
     (sql/insert! db-spec migrations-table
                  {:id         (str id)
                   :created_at (format-datetime (Date.))}))
 
   (remove-migration-id [_ id]
-    (ensure-migrations-table-exists db-spec migrations-table)
+    (ensure-migrations-table-exists db-spec migrations-table migrations-table-exists-sql)
     (sql/delete! db-spec migrations-table ["id = ?" id]))
 
   (applied-migration-ids [_]
-    (ensure-migrations-table-exists db-spec migrations-table)
+    (ensure-migrations-table-exists db-spec migrations-table migrations-table-exists-sql)
     (sql/query db-spec
                [(str "SELECT id FROM " migrations-table " ORDER BY created_at")]
                {:row-fn :id})))
@@ -70,11 +84,21 @@
   The following options are allowed:
 
   :migrations-table - the name of the table to store the applied migrations
-                      (defaults to ragtime_migrations)"
+                      (defaults to ragtime_migrations)
+
+  :migrations-table-exists-sql - the SQL to execute when checking if
+                                 `:migrations-table` exists or should be created.
+                                 Defaults to `nil`. When not set, a table will be
+                                 checked via database meta data which can be slow
+                                 if the DBMS has managing large number of tables.
+                                 For more details see:
+                                 https://github.com/weavejester/ragtime/issues/157"
   ([db-spec]
    (sql-database db-spec {}))
   ([db-spec options]
-   (->SqlDatabase db-spec (:migrations-table options "ragtime_migrations"))))
+   (->SqlDatabase db-spec
+                  (:migrations-table options "ragtime_migrations")
+                  (:migrations-table-exists-sql options))))
 
 (defn- execute-sql! [db-spec statements transaction?]
   (doseq [s statements]

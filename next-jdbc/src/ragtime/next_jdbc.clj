@@ -117,7 +117,7 @@
                       schema name if your DB supports that and you are not
                       using the default one (ex.: myschema.migrations)
 
-  :migrations-table-exists-sql - the SQL to execute when checking of
+  :migrations-table-exists-sql - the SQL to execute when checking if
                                  `:migrations-table` exists or should be created.
                                  Defaults to `nil`. When not set, a table will be
                                  checked via database meta data which can be slow

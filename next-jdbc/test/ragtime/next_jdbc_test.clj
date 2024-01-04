@@ -6,8 +6,7 @@
             [clojure.java.io :as io]
             [next.jdbc :as n.j]
             [next.jdbc.sql :as sql])
-  (:import
-   (clojure.lang ExceptionInfo)))
+  (:import [clojure.lang ExceptionInfo]))
 
 (def datasource {:jdbcUrl "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1"})
 
