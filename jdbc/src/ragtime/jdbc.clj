@@ -39,7 +39,8 @@
   (some (partial metadata-matches-table? table-name)
         (get-table-metadata db-spec)))
 
-(defn- table-exists-via-provided-sql? [db-spec ^String migrations-table-exists-sql]
+(defn- table-exists-via-provided-sql? [db-spec
+                                       ^String migrations-table-exists-sql]
   (pos? (count (sql/query db-spec [migrations-table-exists-sql]))))
 
 (defn- table-exists? [datasource table-name migrations-table-exists-sql]
@@ -47,7 +48,8 @@
     (table-exists-via-provided-sql? datasource migrations-table-exists-sql)
     (table-exists-via-metadata-scan? datasource table-name)))
 
-(defn- ensure-migrations-table-exists [db-spec migrations-table migrations-table-exists-sql]
+(defn- ensure-migrations-table-exists [db-spec migrations-table
+                                       migrations-table-exists-sql]
   (when-not (table-exists? db-spec migrations-table migrations-table-exists-sql)
     (sql/execute! db-spec [(migrations-table-ddl migrations-table)])))
 
@@ -58,17 +60,20 @@
 (defrecord SqlDatabase [db-spec migrations-table migrations-table-exists-sql]
   p/DataStore
   (add-migration-id [_ id]
-    (ensure-migrations-table-exists db-spec migrations-table migrations-table-exists-sql)
+    (ensure-migrations-table-exists db-spec migrations-table
+                                    migrations-table-exists-sql)
     (sql/insert! db-spec migrations-table
                  {:id         (str id)
                   :created_at (format-datetime (Date.))}))
 
   (remove-migration-id [_ id]
-    (ensure-migrations-table-exists db-spec migrations-table migrations-table-exists-sql)
+    (ensure-migrations-table-exists db-spec migrations-table
+                                    migrations-table-exists-sql)
     (sql/delete! db-spec migrations-table ["id = ?" id]))
 
   (applied-migration-ids [_]
-    (ensure-migrations-table-exists db-spec migrations-table migrations-table-exists-sql)
+    (ensure-migrations-table-exists db-spec migrations-table
+                                    migrations-table-exists-sql)
     (sql/query db-spec
                [(str "SELECT id FROM " migrations-table " ORDER BY created_at")]
                {:row-fn :id})))

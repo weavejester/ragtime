@@ -66,7 +66,8 @@
     (some (partial metadata-matches-table? table-name-unquoted)
           tables)))
 
-(defn- table-exists-via-provided-sql? [datasource ^String migrations-table-exists-sql]
+(defn- table-exists-via-provided-sql? [datasource
+                                       ^String migrations-table-exists-sql]
   (pos? (count (jdbc/execute! datasource [migrations-table-exists-sql]))))
 
 (defn- table-exists? [datasource table-name migrations-table-exists-sql]
@@ -74,8 +75,10 @@
     (table-exists-via-provided-sql? datasource migrations-table-exists-sql)
     (table-exists-via-metadata-scan? datasource table-name)))
 
-(defn- ensure-migrations-table-exists [datasource migrations-table migrations-table-exists-sql]
-  (when-not (table-exists? datasource migrations-table migrations-table-exists-sql)
+(defn- ensure-migrations-table-exists [datasource migrations-table
+                                       migrations-table-exists-sql]
+  (when-not (table-exists? datasource migrations-table
+                           migrations-table-exists-sql)
     (let [sql (str "create table " migrations-table
                    " (id varchar(255), created_at varchar(32))")]
       (jdbc/execute! datasource [sql]))))
@@ -87,17 +90,20 @@
 (defrecord SqlDatabase [datasource migrations-table migrations-table-exists-sql]
   p/DataStore
   (add-migration-id [_ id]
-    (ensure-migrations-table-exists datasource migrations-table migrations-table-exists-sql)
+    (ensure-migrations-table-exists datasource migrations-table
+                                    migrations-table-exists-sql)
     (sql/insert! datasource migrations-table
                  {:id         (str id)
                   :created_at (format-datetime (Date.))}))
 
   (remove-migration-id [_ id]
-    (ensure-migrations-table-exists datasource migrations-table migrations-table-exists-sql)
+    (ensure-migrations-table-exists datasource migrations-table
+                                    migrations-table-exists-sql)
     (sql/delete! datasource migrations-table ["id = ?" id]))
 
   (applied-migration-ids [_]
-    (ensure-migrations-table-exists datasource migrations-table migrations-table-exists-sql)
+    (ensure-migrations-table-exists datasource migrations-table
+                                    migrations-table-exists-sql)
     (let [sql [(str "SELECT id FROM " migrations-table " ORDER BY created_at")]]
       (->> (sql/query datasource sql {:builder-fn rs/as-unqualified-lower-maps})
            (map :id)))))
