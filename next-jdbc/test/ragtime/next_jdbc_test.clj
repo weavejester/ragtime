@@ -5,8 +5,7 @@
             [ragtime.protocols :as p]
             [clojure.java.io :as io]
             [next.jdbc :as n.j]
-            [next.jdbc.sql :as sql])
-  (:import [clojure.lang ExceptionInfo]))
+            [next.jdbc.sql :as sql]))
 
 (def datasource {:jdbcUrl "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1"})
 
@@ -70,13 +69,7 @@
     (is (= ["12" "13"]
            (->> ["SELECT * FROM ragtime_migrations"]
                 (sql/query (:datasource db))
-                (map :RAGTIME_MIGRATIONS/ID)))))
-
-  (let [sql-returns-more-than-1-row "SELECT * FROM INFORMATION_SCHEMA.TABLES"
-        db (jdbc/sql-database datasource
-                              {:migrations-table-exists-sql sql-returns-more-than-1-row})]
-    (is (thrown? ExceptionInfo
-                 (p/add-migration-id db "12")))))
+                (map :RAGTIME_MIGRATIONS/ID))))))
 
 (defn table-names [db]
   (set (map :TABLES/TABLE_NAME (sql/query (:datasource db) ["SHOW TABLES"]))))

@@ -40,13 +40,7 @@
         (get-table-metadata db-spec)))
 
 (defn- table-exists-via-provided-sql? [db-spec ^String migrations-table-exists-sql]
-  (let [row-count (count (sql/query db-spec [migrations-table-exists-sql]))]
-    (case row-count
-      0 false
-      1 true
-      (throw (ex-info "Provided SQL doesn't directly answer if a migration table exists or not"
-                      {:migration-table-exists-sql migrations-table-exists-sql
-                       :returned-row-count row-count})))))
+  (pos? (count (sql/query db-spec [migrations-table-exists-sql]))))
 
 (defn- table-exists? [datasource table-name migrations-table-exists-sql]
   (if migrations-table-exists-sql
