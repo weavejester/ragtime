@@ -16,9 +16,10 @@
            [java.util Date]
            [java.util.regex Pattern]))
 
-(defn- get-table-metadata [^DatabaseMetaData metadata ^Connection conn]
+(defn- get-table-metadata
+  [^DatabaseMetaData metadata ^Connection conn ^String catalog-type]
   (-> metadata
-      (.getTables (.getCatalog conn) nil nil (into-array ["TABLE"]))
+      (.getTables (.getCatalog conn) nil nil (into-array [catalog-type]))
       ;; Returns unqualified maps as some databases (e.g. Oracle) can only return them
       (rs/datafiable-result-set conn {:builder-fn rs/as-unqualified-lower-maps})))
 
@@ -27,22 +28,22 @@
     (when (not= quote-char " ")
       quote-char)))
 
-(defn- get-db-metadata* [^Connection c]
+(defn- get-db-metadata* [^Connection c ^String catalog-type]
   (let [metadata (.getMetaData c)]
-    {:tables (get-table-metadata metadata c)
+    {:tables (get-table-metadata metadata c catalog-type)
      :quote  (get-identifier-quote metadata)}))
 
-(defn- get-db-metadata [datasource]
+(defn- get-db-metadata [datasource catalog-type]
   (cond
     (instance? java.sql.Connection datasource)
-    (get-db-metadata* datasource)
+    (get-db-metadata* datasource catalog-type)
 
     (instance? java.sql.Connection (:connectable datasource))
-    (get-db-metadata* (:connectable datasource))
+    (get-db-metadata* (:connectable datasource) catalog-type)
 
     :else
     (with-open [conn (jdbc/get-connection datasource)]
-      (get-db-metadata* conn))))
+      (get-db-metadata* conn catalog-type))))
 
 (defn- unquote-table-name [quote-char table-name]
   ;; Remove db quote around the schema and table name; ex.: "\"schema\".\"table\""
@@ -60,14 +61,14 @@
                        (str table_schem "." table_name)
                        table_name)))
 
-(defn- table-exists? [datasource ^String table-name]
-  (let [{:keys [tables quote]} (get-db-metadata datasource)
+(defn- table-exists? [datasource ^String table-name ^String catalog-type]
+  (let [{:keys [tables quote]} (get-db-metadata datasource catalog-type)
         table-name-unquoted    (unquote-table-name quote table-name)]
     (some (partial metadata-matches-table? table-name-unquoted)
           tables)))
 
-(defn- ensure-migrations-table-exists [datasource migrations-table]
-  (when-not (table-exists? datasource migrations-table)
+(defn- ensure-migrations-table-exists [datasource migrations-table catalog-type]
+  (when-not (table-exists? datasource migrations-table catalog-type)
     (let [sql (str "create table " migrations-table
                    " (id varchar(255), created_at varchar(32))")]
       (jdbc/execute! datasource [sql]))))
@@ -76,20 +77,20 @@
   (-> (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS")
       (.format dt)))
 
-(defrecord SqlDatabase [datasource migrations-table]
+(defrecord SqlDatabase [datasource migrations-table catalog-type]
   p/DataStore
   (add-migration-id [_ id]
-    (ensure-migrations-table-exists datasource migrations-table)
+    (ensure-migrations-table-exists datasource migrations-table catalog-type)
     (sql/insert! datasource migrations-table
                  {:id         (str id)
                   :created_at (format-datetime (Date.))}))
 
   (remove-migration-id [_ id]
-    (ensure-migrations-table-exists datasource migrations-table)
+    (ensure-migrations-table-exists datasource migrations-table catalog-type)
     (sql/delete! datasource migrations-table ["id = ?" id]))
 
   (applied-migration-ids [_]
-    (ensure-migrations-table-exists datasource migrations-table)
+    (ensure-migrations-table-exists datasource migrations-table catalog-type)
     (let [sql [(str "SELECT id FROM " migrations-table " ORDER BY created_at")]]
       (->> (sql/query datasource sql {:builder-fn rs/as-unqualified-lower-maps})
            (map :id)))))
@@ -101,11 +102,17 @@
   :migrations-table - the name of the table to store the applied migrations
                       (defaults to ragtime_migrations). You must include the
                       schema name if your DB supports that and you are not
-                      using the default one (ex.: myschema.migrations)"
+                      using the default one (ex.: myschema.migrations)
+
+  :catalog-type - the typename the DB assigns to the migrations table.
+                  This is one of the values the DatabaseMetaData reports for
+                  .getTableTypes. Defaults to \"TABLE\"."
   ([datasource]
    (sql-database datasource {}))
   ([datasource options]
-   (->SqlDatabase datasource (:migrations-table options "ragtime_migrations"))))
+   (let [table-name (:migrations-table options "ragtime_migrations")
+         catalog-type (:catalog-type options "TABLE")]
+     (->SqlDatabase datasource table-name catalog-type))))
 
 (defn- execute-sql! [datasource statements transaction?]
   (if transaction?
