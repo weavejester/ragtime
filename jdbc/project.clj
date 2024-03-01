@@ -9,4 +9,4 @@
                  [dev.weavejester/ragtime.core "0.9.3"]
                  [resauce "0.2.0"]]
   :profiles
-  {:dev {:dependencies [[com.h2database/h2 "1.4.200"]]}})
+  {:dev {:dependencies [[com.h2database/h2 "2.2.224"]]}})
