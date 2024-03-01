@@ -14,7 +14,7 @@
 
 (defn- migrations-table-ddl [table-name]
   (sql/create-table-ddl table-name
-                        [[:id "varchar(255)"]
+                        [[:id "varchar(255)" "primary key"]
                          [:created_at "varchar(32)"]]))
 
 (defn- get-table-metadata* [^Connection conn]

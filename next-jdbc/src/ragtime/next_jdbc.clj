@@ -69,7 +69,7 @@
 (defn- ensure-migrations-table-exists [datasource migrations-table]
   (when-not (table-exists? datasource migrations-table)
     (let [sql (str "create table " migrations-table
-                   " (id varchar(255), created_at varchar(32))")]
+                   " (id varchar(255) primary key, created_at varchar(32))")]
       (jdbc/execute! datasource [sql]))))
 
 (defn- format-datetime [^Date dt]
