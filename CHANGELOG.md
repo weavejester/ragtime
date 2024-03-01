@@ -1,3 +1,7 @@
+## 0.9.4 (2024-03-01)
+
+* Fixed SQL separator marker for MySQL (#159)
+
 ## 0.9.3 (2022-11-15)
 
 * Made `migrate-all` interruptable (#154)
