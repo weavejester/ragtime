@@ -53,6 +53,24 @@
                 (n.j/execute! (:datasource db))
                 (map :MIGRATIONS/ID))))))
 
+(deftest test-migrations-table-exists-sql
+  (let [migrations-table-exists-sql (str "SELECT * FROM INFORMATION_SCHEMA.TABLES"
+                                         " WHERE TABLE_CATALOG='TESTDB'"
+                                         " AND TABLE_NAME='RAGTIME_MIGRATIONS'")
+        db (jdbc/sql-database datasource
+                              {:migrations-table-exists-sql migrations-table-exists-sql})]
+    (p/add-migration-id db "12")
+    (is (= ["12"]
+           (->> ["SELECT * FROM ragtime_migrations"]
+                (sql/query (:datasource db))
+                (map :RAGTIME_MIGRATIONS/ID))))
+
+    (p/add-migration-id db "13")
+    (is (= ["12" "13"]
+           (->> ["SELECT * FROM ragtime_migrations"]
+                (sql/query (:datasource db))
+                (map :RAGTIME_MIGRATIONS/ID))))))
+
 (defn table-names [db]
   (set (map :TABLES/TABLE_NAME (sql/query (:datasource db) ["SHOW TABLES"]))))
 
