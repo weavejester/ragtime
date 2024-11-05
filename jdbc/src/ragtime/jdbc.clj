@@ -78,6 +78,7 @@
 
 (defn- execute-sql! [db-spec statements transaction?]
   (doseq [s statements]
+    (println "sql:" s ", transaction:" transaction?)
     (sql/execute! db-spec [s] {:transaction? transaction?})))
 
 (defrecord SqlMigration [id up down transactions]
@@ -130,15 +131,28 @@
 (defn- read-sql [file]
   (str/split (slurp file) #"(?m)\n\s*--\s?;;\s*\n"))
 
+(defn- sql-file-transactions [sql-migration-map]
+  (let [{:keys [up down]} sql-migration-map
+        is-up-transaction (-> up first (clojure.string/starts-with? "--transaction-off"))
+        is-down-transaction (-> down first (clojure.string/starts-with? "--transaction-off"))
+        transactions (case [is-up-transaction is-down-transaction]
+                       [true true] false
+                       [true false] :down
+                       [false true] :up
+                       :both)]
+    (assoc sql-migration-map :transactions transactions)))
+
 (defmethod load-files ".sql" [files]
   (for [[id files] (->> files
                         (group-by (comp first sql-file-parts))
                         (sort-by key))]
     (let [{:strs [up down]} (group-by (comp second sql-file-parts) files)]
-      (sql-migration
+      (->
        {:id   (basename id)
         :up   (vec (mapcat read-sql (sort-by str up)))
-        :down (vec (mapcat read-sql (sort-by str down)))}))))
+        :down (vec (mapcat read-sql (sort-by str down)))}
+       sql-file-transactions
+       sql-migration))))
 
 (defn- load-all-files [files]
   (->> (group-by file-extension files)
