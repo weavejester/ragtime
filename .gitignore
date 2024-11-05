@@ -10,3 +10,4 @@ codox/
 .lein-deps-sum
 .lein-repl-history
 .nrepl-port
+/.clj-kondo
