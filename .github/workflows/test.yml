@@ -14,9 +14,11 @@ jobs:
           java-version: '11'
 
       - name: Install clojure tools
-        uses: DeLaGuardo/setup-clojure@10.1
+        uses: DeLaGuardo/setup-clojure@12.5
         with:
-          lein: 2.9.10
+          lein: 2.11.2
+          clj-kondo: 2024.09.27
+          cljfmt: 0.13.0
 
       - name: Cache clojure dependencies
         uses: actions/cache@v3
