@@ -10,8 +10,8 @@
 
 (defn- migrations-table-ddl [table-name]
   (jdbc/create-table-ddl table-name
-                        [[:id "varchar(255)" "primary key"]
-                         [:created_at "varchar(32)"]]))
+                         [[:id "varchar(255)" "primary key"]
+                          [:created_at "varchar(32)"]]))
 
 (defn- get-table-metadata* [^Connection conn]
   (with-open [tables (-> conn
@@ -58,8 +58,8 @@
     (ensure-migrations-table-exists db-spec migrations-table
                                     migrations-table-exists-sql)
     (jdbc/insert! db-spec migrations-table
-                 {:id         (str id)
-                  :created_at (format-datetime (Date.))}))
+                  {:id         (str id)
+                   :created_at (format-datetime (Date.))}))
 
   (remove-migration-id [_ id]
     (ensure-migrations-table-exists db-spec migrations-table
@@ -70,8 +70,8 @@
     (ensure-migrations-table-exists db-spec migrations-table
                                     migrations-table-exists-sql)
     (jdbc/query db-spec
-               [(str "SELECT id FROM " migrations-table " ORDER BY created_at")]
-               {:row-fn :id})))
+                [(str "SELECT id FROM " migrations-table " ORDER BY created_at")]
+                {:row-fn :id})))
 
 (defn sql-database
   "Given a db-spec and a map of options, return a Migratable database.
