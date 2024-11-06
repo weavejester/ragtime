@@ -7,6 +7,6 @@
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [com.github.seancorfield/next.jdbc "1.3.955"]
                  [dev.weavejester/ragtime.core "0.9.5"]
-                 [resauce "0.2.0"]]
+                 [dev.weavejester/ragtime.sql "0.9.5"]]
   :profiles
   {:dev {:dependencies [[com.h2database/h2 "2.2.224"]]}})

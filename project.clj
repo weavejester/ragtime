@@ -4,10 +4,11 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[dev.weavejester/ragtime.core "0.9.5"]
+                 [dev.weavejester/ragtime.sql "0.9.5"]
                  [dev.weavejester/ragtime.jdbc "0.9.5"]
                  [dev.weavejester/ragtime.next-jdbc "0.9.5"]]
   :plugins [[lein-sub "0.3.0"]
             [lein-codox "0.10.3"]]
-  :sub ["core" "jdbc" "next-jdbc"]
-  :codox {:source-paths ["core/src" "jdbc/src"]
+  :sub ["core" "sql" "jdbc" "next-jdbc"]
+  :codox {:source-paths ["core/src" "sql/src" "jdbc/src" "next-jdbc/src"]
           :output-path  "codox"})

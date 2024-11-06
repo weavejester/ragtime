@@ -1,17 +1,14 @@
 (ns ragtime.next-jdbc
   "Functions for loading SQL migrations and applying them to a SQL database."
   (:refer-clojure :exclude [load-file])
-  (:require [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [next.jdbc :as jdbc]
+  (:require [next.jdbc :as jdbc]
             [next.jdbc.default-options]
             [next.jdbc.result-set :as rs]
             [next.jdbc.sql :as sql]
             [clojure.string :as str]
             [ragtime.protocols :as p]
-            [resauce.core :as resauce])
-  (:import [java.io File]
-           [java.sql Connection DatabaseMetaData]
+            [ragtime.sql :as rsql])
+  (:import [java.sql Connection DatabaseMetaData]
            [java.text SimpleDateFormat]
            [java.util Date]
            [java.util.regex Pattern]))
@@ -152,60 +149,12 @@
   [migration-map]
   (map->SqlMigration migration-map))
 
-(defn- file-extension [file]
-  (re-find #"\.[^.]*$" (str file)))
-
-(let [pattern (re-pattern (str "([^\\/]*)\\/?$"))]
-  (defn- basename [file]
-    (second (re-find pattern (str file)))))
-
-(defn- remove-extension [file]
-  (second (re-matches #"(.*)\.[^.]*" (str file))))
-
-(defmulti load-files
-  "Given an collection of files with the same extension, return a ordered
-  collection of migrations. Dispatches on extension (e.g. \".edn\"). Extend
-  this multimethod to support new formats for specifying SQL migrations."
-  (fn [files] (file-extension (first files))))
-
-(defmethod load-files :default [_files])
-
-(defmethod load-files ".edn" [files]
-  (for [file files]
-    (-> (slurp file)
-        (edn/read-string)
-        (update-in [:id] #(or % (-> file basename remove-extension)))
-        (update-in [:transactions] (fnil identity :both))
-        (sql-migration))))
-
-(defn- sql-file-parts [file]
-  (rest (re-matches #"(.*?)\.(up|down)(?:\.(\d+))?\.sql" (str file))))
-
-(defn- read-sql [file]
-  (str/split (slurp file) #"(?m)\n\s*--\s?;;\s*\n"))
-
-(defmethod load-files ".sql" [files]
-  (for [[id files] (->> files
-                        (group-by (comp first sql-file-parts))
-                        (sort-by key))]
-    (let [{:strs [up down]} (group-by (comp second sql-file-parts) files)]
-      (sql-migration
-       {:id   (basename id)
-        :up   (vec (mapcat read-sql (sort-by str up)))
-        :down (vec (mapcat read-sql (sort-by str down)))}))))
-
-(defn- load-all-files [files]
-  (->> (group-by file-extension files)
-       (vals)
-       (mapcat load-files)
-       (sort-by :id)))
-
 (defn load-directory
   "Load a collection of Ragtime migrations from a directory."
   [path]
-  (load-all-files (map #(.toURI ^File %) (file-seq (io/file path)))))
+  (map sql-migration (rsql/load-directory path)))
 
 (defn load-resources
   "Load a collection of Ragtime migrations from a classpath prefix."
   [path]
-  (load-all-files (resauce/resource-dir path)))
+  (map sql-migration (rsql/load-resources path)))

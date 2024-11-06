@@ -29,6 +29,10 @@ jobs:
         run: lein install
         working-directory: ./core
 
+      - name: Install Ragtime SQL locally
+        run: lein install
+        working-directory: ./sql
+
       - name: Run tests
         run: lein sub test
 
