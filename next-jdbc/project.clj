@@ -5,7 +5,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.10.3"]
-                 [com.github.seancorfield/next.jdbc "1.3.909"]
+                 [com.github.seancorfield/next.jdbc "1.3.955"]
                  [dev.weavejester/ragtime.core "0.9.4"]
                  [resauce "0.2.0"]]
   :profiles
