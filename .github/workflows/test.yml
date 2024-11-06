@@ -25,5 +25,9 @@ jobs:
           key: cljdeps-${{ hashFiles('project.clj') }}
           restore-keys: cljdeps-
 
+      - name: Install Ragtime core locally
+        run: lein install
+        working-directory: ./core
+
       - name: Run tests
         run: lein sub test
