@@ -1,8 +1,7 @@
 (ns ragtime.repl-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is]]
             [ragtime.core-test :refer [in-memory-db assoc-migration]]
-            [ragtime.repl :as repl]
-            [ragtime.core :as core]))
+            [ragtime.repl :as repl]))
 
 (def migrations
   [(assoc-migration "a" :a 1)
@@ -56,4 +55,5 @@
          Exception
          #"^Conflict! Expected c but b was applied\.$"
          (with-out-str
-           (repl/migrate {:datastore database :migrations mixed-up-migrations}))))))
+           (repl/migrate {:datastore database
+                          :migrations mixed-up-migrations}))))))

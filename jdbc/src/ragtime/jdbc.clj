@@ -132,7 +132,7 @@
   this multimethod to support new formats for specifying SQL migrations."
   (fn [files] (file-extension (first files))))
 
-(defmethod load-files :default [files])
+(defmethod load-files :default [_files])
 
 (defmethod load-files ".edn" [files]
   (for [file files]

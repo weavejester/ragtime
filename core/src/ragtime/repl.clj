@@ -1,7 +1,6 @@
 (ns ragtime.repl
   "Convenience functions for running in the REPL."
   (:require [ragtime.core :as core]
-            [ragtime.protocols :as p]
             [ragtime.strategy :as strategy]
             [ragtime.reporter :as reporter]))
 

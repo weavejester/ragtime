@@ -1,5 +1,5 @@
 (ns ragtime.reporter-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is]]
             [ragtime.reporter :as reporter]))
 
 (deftest silent-reporter-test

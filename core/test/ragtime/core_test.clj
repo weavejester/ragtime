@@ -1,6 +1,6 @@
 (ns ragtime.core-test
-  (:require [clojure.test :refer :all]
-            [ragtime.core :refer :all]
+  (:require [clojure.test :refer [deftest is testing]]
+            [ragtime.core :as ragtime]
             [ragtime.protocols :as p]
             [ragtime.strategy :as strategy]
             [ragtime.reporter :as reporter]))
@@ -35,33 +35,36 @@
 (deftest test-into-index
   (let [assoc-x (assoc-migration "assoc-x" :x 1)
         assoc-y (assoc-migration "assoc-y" :y 2)
-        index   (into-index [assoc-x])]
+        index   (ragtime/into-index [assoc-x])]
     (is (= (index "assoc-x") assoc-x))
-    (is (= ((into-index index [assoc-y]) "assoc-y") assoc-y))))
+    (is (= ((ragtime/into-index index [assoc-y]) "assoc-y") assoc-y))))
 
 (deftest test-migrate-and-rollback
   (let [database  (in-memory-db)
         migration (assoc-migration "m" :x 1)
-        index     (into-index [migration])]
+        index     (ragtime/into-index [migration])]
     (testing "migrate"
-      (migrate database migration)
+      (ragtime/migrate database migration)
       (is (= (:x @(:data database)) 1))
-      (is (contains? (set (applied-migrations database index)) migration)))
+      (is (contains? (set (ragtime/applied-migrations database index))
+                     migration)))
     (testing "rollback"
-      (rollback database migration)
+      (ragtime/rollback database migration)
       (is (nil? (:x @(:data database))))
-      (is (not (contains? (set (applied-migrations database index)) migration))))))
+      (is (not (contains? (set (ragtime/applied-migrations database index))
+                          migration))))))
 
 (deftest test-migrate-all
   (let [database (in-memory-db)
         assoc-x  (assoc-migration "assoc-x" :x 1)
         assoc-y  (assoc-migration "assoc-y" :y 2)
         assoc-z  (assoc-migration "assoc-z" :z 3)
-        index    (into-index [assoc-x assoc-y assoc-z])]
-    (migrate-all database index [assoc-x assoc-y])
+        index    (ragtime/into-index [assoc-x assoc-y assoc-z])]
+    (ragtime/migrate-all database index [assoc-x assoc-y])
     (is (= (:x @(:data database)) 1))
     (is (= (:y @(:data database)) 2))
-    (migrate-all database index [assoc-x assoc-z] {:strategy strategy/rebase})
+    (ragtime/migrate-all database index [assoc-x assoc-z]
+                         {:strategy strategy/rebase})
     (is (= (:x @(:data database)) 1))
     (is (nil? (:y @(:data database))))
     (is (= (:z @(:data database)) 3))))
@@ -74,7 +77,8 @@
         exception  (volatile! nil)]
     (doto (Thread.
            #(try
-              (migrate-all database {} migrations {:strategy strategy/rebase})
+              (ragtime/migrate-all database {} migrations
+                                   {:strategy strategy/rebase})
               (catch InterruptedException e
                 (vreset! exception e))))
       (.start)
@@ -90,15 +94,15 @@
                  (some-> @exception throw)))))
 
 (deftest test-migrate-all-apply-new
-  "Tests migrate-all, with the apply-new strategy, in the scenario where a
-  migration id is saved to a Migratable that persists after the application
-  terminates. On the next call to migrate-all, migrations present in the
-  Migratable should not be applied again, even if they have not yet been
-  remembered by the application."
+  ;; Tests migrate-all, with the apply-new strategy, in the scenario where a
+  ;; migration id is saved to a Migratable that persists after the application
+  ;; terminates. On the next call to migrate-all, migrations present in the
+  ;; Migratable should not be applied again, even if they have not yet been
+  ;; remembered by the application.
   (let [database (in-memory-db)
         assoc-y  (assoc-migration "assoc-y" :y 2)]
     (p/add-migration-id database (p/id assoc-y))
-    (migrate-all database {} [assoc-y] {:strategy strategy/apply-new})
+    (ragtime/migrate-all database {} [assoc-y] {:strategy strategy/apply-new})
     (is (nil? (:y @(:data database))))))
 
 (deftest test-rollback-last
@@ -107,12 +111,12 @@
         assoc-y    (assoc-migration "assoc-y" :y 2)
         assoc-z    (assoc-migration "assoc-z" :z 3)
         migrations [assoc-x assoc-y assoc-z]]
-    (migrate-all database {} migrations)
-    (rollback-last database (into-index migrations))
+    (ragtime/migrate-all database {} migrations)
+    (ragtime/rollback-last database (ragtime/into-index migrations))
     (is (= (:x @(:data database)) 1))
     (is (= (:y @(:data database)) 2))
     (is (not (contains? @(:data database) :z)))
-    (rollback-last database (into-index migrations) 2)
+    (ragtime/rollback-last database (ragtime/into-index migrations) 2)
     (is (not (contains? @(:data database) :y)))
     (is (not (contains? @(:data database) :z)))))
 
@@ -122,8 +126,8 @@
         assoc-y    (assoc-migration "assoc-y" :y 2)
         assoc-z    (assoc-migration "assoc-z" :z 3)
         migrations [assoc-x assoc-y assoc-z]]
-    (migrate-all database {} migrations)
-    (rollback-to database (into-index migrations) "assoc-x")
+    (ragtime/migrate-all database {} migrations)
+    (ragtime/rollback-to database (ragtime/into-index migrations) "assoc-x")
     (is (= (:x @(:data database)) 1))
     (is (not (contains? @(:data database) :y)))
     (is (not (contains? @(:data database) :z)))))
@@ -134,9 +138,11 @@
         assoc-y    (assoc-migration "assoc-y" :y 2)
         assoc-z    (assoc-migration "assoc-z" :z 3)
         migrations [assoc-x assoc-y assoc-z]]
-    (migrate-all database {} migrations)
+    (ragtime/migrate-all database {} migrations)
     (is (thrown? clojure.lang.ExceptionInfo
-                 (rollback-to database (into-index migrations) "assoc-not-exists")))
+                 (ragtime/rollback-to database
+                                      (ragtime/into-index migrations)
+                                      "assoc-not-exists")))
     (is (= (:x @(:data database)) 1))
     (is (= (:y @(:data database)) 2))
     (is (= (:z @(:data database)) 3))
@@ -149,14 +155,19 @@
         migrations [(assoc-migration "assoc-x" :x 1)
                     (assoc-migration "assoc-y" :y 2)]]
     (is (= (with-out-str
-             (migrate-all database {} migrations
-                          {:strategy strategy/rebase, :reporter reporter/print}))
+             (ragtime/migrate-all database {} migrations
+                                  {:strategy strategy/rebase
+                                   :reporter reporter/print}))
            (format "Applying assoc-x%nApplying assoc-y%n")))
     (is (= (with-out-str
-             (rollback-to database (into-index migrations) "assoc-x"
-                          {:reporter reporter/print}))
+             (ragtime/rollback-to database
+                                  (ragtime/into-index migrations)
+                                  "assoc-x"
+                                  {:reporter reporter/print}))
            (format "Rolling back assoc-y%n")))
     (is (= (with-out-str
-             (rollback-last database (into-index migrations) 1
-                            {:reporter reporter/print}))
+             (ragtime/rollback-last database
+                                    (ragtime/into-index migrations)
+                                    1
+                                    {:reporter reporter/print}))
            (format "Rolling back assoc-x%n")))))

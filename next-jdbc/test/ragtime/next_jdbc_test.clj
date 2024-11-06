@@ -1,5 +1,5 @@
 (ns ragtime.next-jdbc-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is use-fixtures]]
             [ragtime.next-jdbc :as jdbc]
             [ragtime.core :as core]
             [ragtime.protocols :as p]
