@@ -31,3 +31,9 @@ jobs:
 
       - name: Run tests
         run: lein sub test
+
+      - name: Lint code
+        run: clj-kondo --lint **/src **/test
+
+      - name: Check formatting
+        run: cljfmt check **/src **/test
