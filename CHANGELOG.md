@@ -1,3 +1,9 @@
+## 0.9.5 (2024-11-06)
+
+* Added primary key restriction to migrations table
+* Added `:migrations-table-exists-sql` option to jdbc and next-jdbc
+* Updated next.jdbc dependency to 1.3.955
+
 ## 0.9.4 (2024-03-01)
 
 * Fixed SQL separator marker for MySQL (#159)
