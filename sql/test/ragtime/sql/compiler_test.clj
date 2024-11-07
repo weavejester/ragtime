@@ -4,11 +4,14 @@
 
 (deftest test-compile
   (is (=  [{:id "create-table-foo"
-            :up "CREATE TABLE foo (id int primary key, name text)"
+            :up "CREATE TABLE foo (id int primary key, full_name text)"
             :down "DROP TABLE foo"}
            {:id "add-column-foo-updated_at"
             :up "ALTER TABLE foo ADD COLUMN updated_at timestamp default now()"
             :down "ALTER TABLE foo DROP COLUMN updated_at"}
+           {:id "rename-column-foo-full_name-to-name"
+            :up "ALTER TABLE foo RENAME COLUMN full_name TO name"
+            :down "ALTER TABLE foo RENAME COLUMN name TO full_name"}
            {:id "create-index-foo_name"
             :up "CREATE INDEX foo_name ON TABLE foo (name)",
             :down "DROP INDEX foo_name"}
@@ -23,10 +26,9 @@
             :down (str "CREATE TABLE foo (id int primary key,"
                        " updated_at timestamp default now())")}]
           (compiler/compile
-           '[[:create-table foo
-              [id "int primary key"]
-              [name "text"]]
+           '[[:create-table foo [id "int primary key"] [full_name "text"]]
              [:add-column foo updated_at "timestamp default now()"]
+             [:rename-column foo full_name name]
              [:create-index foo_name foo [name]]
              [:drop-index foo_name]
              [:drop-column foo name]
