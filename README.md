@@ -27,17 +27,29 @@ Ragtime needs three pieces of data to work:
 
 A data store is an implementation of the `DataStore` protocol, and
 tells Ragtime how to record which migrations are applied to an
-arbitrary store of data, such as a database.
+arbitrary store of data, such as a database. It has three methods:
 
-Since 0.5.0, migrations are implementations of the `Migration` protocol,
-which has three methods:
+* `add-migration-id`      - add a new migration ID to the store
+* `remove-migration-id`   - remove a migration ID from the store
+* `applied-migration-ids` - return an ordered list of applied IDS
+
+Migrations are implementations of the `Migration` protocol, which also
+has three methods:
 
 * `id`        - returns a unique ID for the migration
 * `run-up!`   - applies the migration to a database
 * `run-down!` - rolls back the migration in a database
 
-Ragtime comes with a way of loading SQL migrations from files, and
-applying them to a SQL database.
+Ragtime comes with implementations of these protocols for Cloure's
+[java.jdbc][] library and Sean Corfield's [next.jdbc][] library,
+therefore supporting SQL migrations out of the box.
+
+The migration store for SQL database is a special migrations table,
+and the migrations can be specified as either `.sql` files, or `.edn`
+files. For more information, see the documentation below:
+
+[java.jdbc]: https://github.com/clojure/java.jdbc
+[next.jdbc]: https://github.com/seancorfield/next-jdbc
 
 ## Documentation
 
