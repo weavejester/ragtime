@@ -24,7 +24,7 @@
            :down ["--\n-- ISSUE 159 Test\n--\nDROP TABLE quxc;"
                   "DROP TABLE quxd;\n"]}
           {:id "008-test", :transactions :both
-            :up ["CREATE TABLE aaa (id int)"] :down ["DROP TABLE aaa"]}
+           :up ["CREATE TABLE aaa (id int)"] :down ["DROP TABLE aaa"]}
           {:id "009-test", :transactions :both
            :up ["CREATE TABLE bbb (id int)"] :down ["DROP TABLE bbb"]}]
          (sql/load-directory "test/migrations"))))
