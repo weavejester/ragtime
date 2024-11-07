@@ -14,7 +14,7 @@
 (defmethod gen-id :rename-column [[_ table old new]]
   (str "rename-column-" table "-" old "-to-" new))
 
-(defn- normalize-migration [migration]
+(defn- normalize [migration]
   (if (vector? migration)
     {:id (gen-id migration), :do [migration]}
     migration))
@@ -22,18 +22,20 @@
 (defmulti ^:private compile-expr
   (fn [_state [key & _args]] key))
 
-(defn- compile-do [state expr]
-  (let [{:keys [state up down]} (compile-expr state expr)]
-    (-> state
-        (update-in [:migration :up] #(conj (or % []) up))
-        (update-in [:migration :down] #(into [down] %)))))
+(defn- compile-do
+  ([{:keys [migration] :as state}]
+   (update state :migrations conj (dissoc migration :do)))
+  ([state expr]
+   (let [{:keys [state up down]} (compile-expr state expr)]
+     (-> state
+         (update-in [:migration :up] #(conj (or % []) up))
+         (update-in [:migration :down] #(into [down] %))))))
 
 (defn- compile-migration
   ([{:keys [migrations]}] migrations)
   ([state migration]
    (if-some [exprs (:do migration)]
-     (let [state (reduce compile-do (assoc state :migration migration) exprs)]
-       (update state :migrations conj (-> state :migration (dissoc :do))))
+     (transduce identity compile-do (assoc state :migration migration) exprs)
      (update state :migrations conj migration))))
 
 (defn compile
@@ -52,10 +54,7 @@
 
       [[:create-table t [id \"int\"]]]"
   [migrations]
-  (transduce (map normalize-migration)
-             compile-migration
-             {:migrations []}
-             migrations))
+  (transduce (map normalize) compile-migration {:migrations []} migrations))
 
 (defn- column-map [columns]
   (reduce (fn [m [col def]] (assoc m col def)) {} columns))
