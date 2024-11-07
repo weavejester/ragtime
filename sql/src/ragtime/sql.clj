@@ -2,6 +2,7 @@
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.string :as str]
+            [ragtime.sql.compiler :as compiler]
             [resauce.core :as resauce]))
 
 (defn- wrap-single-migration [migration]
@@ -44,6 +45,7 @@
        (edn/read-string)
        (wrap-single-migration)
        (map normalize-migration)
+       (compiler/compile)
        (guess-id-from-file-extension f)))
 
 (defmulti load-file-seq

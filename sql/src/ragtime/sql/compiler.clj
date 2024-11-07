@@ -27,7 +27,7 @@
     (let [{:keys [state up down]} (compile-expr state expr)
           migration (-> migration
                         (dissoc :do)
-                        (assoc :up up, :down down))]
+                        (assoc :up [up], :down [down]))]
       (update state :migrations conj migration))
     (update state :migrations conj migration)))
 
