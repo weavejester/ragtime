@@ -1,2 +1,2 @@
 [{:id "008-test" :up ["CREATE TABLE aaa (id int)"] :down ["DROP TABLE aaa"]}
- {:id "009-test" :do [:create-table bbb [id "int"]]}]
+ {:id "009-test" :do [[:create-table bbb [id "int"]]]}]

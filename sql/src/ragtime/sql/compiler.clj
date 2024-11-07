@@ -2,9 +2,6 @@
   (:refer-clojure :exclude [compile])
   (:require [clojure.string :as str]))
 
-(defmulti compile-expr
-  (fn [_state [key & _args]] key))
-
 (defmulti gen-id
   (fn [[key & _args]] key))
 
@@ -19,18 +16,24 @@
 
 (defn- normalize-migration [migration]
   (if (vector? migration)
-    {:id (gen-id migration), :do migration}
+    {:id (gen-id migration), :do [migration]}
     migration))
+
+(defmulti ^:private compile-expr
+  (fn [_state [key & _args]] key))
+
+(defn- compile-do [state expr]
+  (let [{:keys [state up down]} (compile-expr state expr)]
+    (-> state
+        (update-in [:migration :up] #(conj (or % []) up))
+        (update-in [:migration :down] #(into [down] %)))))
 
 (defn- compile-migration
   ([{:keys [migrations]}] migrations)
   ([state migration]
-   (if-some [expr (:do migration)]
-     (let [{:keys [state up down]} (compile-expr state expr)
-           migration (-> migration
-                         (dissoc :do)
-                         (assoc :up [up], :down [down]))]
-       (update state :migrations conj migration))
+   (if-some [exprs (:do migration)]
+     (let [state (reduce compile-do (assoc state :migration migration) exprs)]
+       (update state :migrations conj (-> state :migration (dissoc :do))))
      (update state :migrations conj migration))))
 
 (defn compile
@@ -38,7 +41,7 @@
   vector syntax into SQL. This replaces the :do key with the :up and :down keys
   on each affected migration. For example:
 
-      [{:id \"x\" :do [:create-table t [id \"int\"]]}]
+      [{:id \"x\" :do [[:create-table t [id \"int\"]]]}]
 
   Is converted into:
 
