@@ -52,7 +52,9 @@
   Transactions may also be supplied as raw vectors, in which case an id will be
   auto generated:
 
-      [[:create-table t [id \"int\"]]]"
+      [[:create-table t [id \"int\"]]]
+
+  This function is called automatically by ragtime.sql/load-migrations."
   [migrations]
   (transduce (map normalize) compile-migration {:migrations []} migrations))
 
