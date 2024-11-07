@@ -9,6 +9,12 @@
            {:id "add-column-foo-updated_at"
             :up "ALTER TABLE foo ADD COLUMN updated_at timestamp default now()"
             :down "ALTER TABLE foo DROP COLUMN updated_at"}
+           {:id "create-index-foo_name"
+            :up "CREATE INDEX foo_name ON TABLE foo (name)",
+            :down "DROP INDEX foo_name"}
+           {:id "drop-index-foo_name"
+            :up "DROP INDEX foo_name"
+            :down "CREATE INDEX foo_name ON TABLE foo (name)"}
            {:id "drop-column-foo-name"
             :up "ALTER TABLE foo DROP COLUMN name"
             :down "ALTER TABLE foo ADD COLUMN name text"}
@@ -21,5 +27,7 @@
               [id "int primary key"]
               [name "text"]]
              [:add-column foo updated_at "timestamp default now()"]
+             [:create-index foo_name foo [name]]
+             [:drop-index foo_name]
              [:drop-column foo name]
              [:drop-table foo]]))))

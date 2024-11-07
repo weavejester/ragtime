@@ -12,6 +12,8 @@
 (defmethod gen-id :drop-table   [[_ table]]     (str "drop-table-" table))
 (defmethod gen-id :add-column   [[_ table col]] (str "add-column-" table "-" col))
 (defmethod gen-id :drop-column  [[_ table col]] (str "drop-column-" table "-" col))
+(defmethod gen-id :create-index [[_ index]]     (str "create-index-" index))
+(defmethod gen-id :drop-index   [[_ index]]     (str "drop-index-" index))
 
 (defn- normalize-migration [migration]
   (if (vector? migration)
@@ -61,3 +63,15 @@
    :up    (str "ALTER TABLE " table " DROP COLUMN " (name column))
    :down  (str "ALTER TABLE " table " ADD COLUMN " (name column) " "
                (get-in state [:tables table column]))})
+
+(defmethod compile-expr :create-index [state [_ name table columns]]
+  {:state (assoc-in state [:indexes name] {:table table, :columns columns})
+   :up    (str "CREATE INDEX " name " ON TABLE " table
+               " (" (str/join ", " columns) ")")
+   :down  (str "DROP INDEX " name)})
+
+(defmethod compile-expr :drop-index [{:keys [indexes] :as state} [_ name]]
+  {:state (update state :indexes dissoc name)
+   :up    (str "DROP INDEX " name)
+   :down  (str "CREATE INDEX " name " ON TABLE " (:table (indexes name))
+               " (" (str/join ", " (:columns (indexes name))) ")")})
