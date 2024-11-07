@@ -1,4 +1,4 @@
-(defproject dev.weavejester/ragtime.sql "0.9.5"
+(defproject dev.weavejester/ragtime.sql "0.10.0"
   :description "SQL migration for Ragtime"
   :url "https://github.com/weavejester/ragtime"
   :scm {:dir ".."}

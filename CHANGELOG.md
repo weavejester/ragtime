@@ -1,3 +1,8 @@
+## 0.10.0 (2024-11-07)
+
+* Added syntax for generating common SQL migrations
+* Added `ragtime.sql` namespace for loading SQL migrations
+
 ## 0.9.5 (2024-11-06)
 
 * Added primary key restriction to migrations table
