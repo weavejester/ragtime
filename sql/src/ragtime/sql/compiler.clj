@@ -22,20 +22,37 @@
     {:id (gen-id migration), :do migration}
     migration))
 
-(defn- compile-migration [state migration]
-  (if-some [expr (:do migration)]
-    (let [{:keys [state up down]} (compile-expr state expr)
-          migration (-> migration
-                        (dissoc :do)
-                        (assoc :up [up], :down [down]))]
-      (update state :migrations conj migration))
-    (update state :migrations conj migration)))
+(defn- compile-migration
+  ([{:keys [migrations]}] migrations)
+  ([state migration]
+   (if-some [expr (:do migration)]
+     (let [{:keys [state up down]} (compile-expr state expr)
+           migration (-> migration
+                         (dissoc :do)
+                         (assoc :up [up], :down [down]))]
+       (update state :migrations conj migration))
+     (update state :migrations conj migration))))
 
-(defn compile [migrations]
-  (:migrations (transduce (map normalize-migration)
-                          (completing compile-migration)
-                          {:migrations []}
-                          migrations)))
+(defn compile
+  "Takes an ordered collection of migrations, and compiles the migrations using
+  vector syntax into SQL. This replaces the :do key with the :up and :down keys
+  on each affected migration. For example:
+
+      [{:id \"x\" :do [:create-table t [id \"int\"]]}]
+
+  Is converted into:
+
+      [{:id \"x\" :up [\"CREATE TABLE t (id int)\"] :down [\"DROP TABLE t\"]}]
+
+  Transactions may also be supplied as raw vectors, in which case an id will be
+  auto generated:
+
+      [[:create-table t [id \"int\"]]]"
+  [migrations]
+  (transduce (map normalize-migration)
+             compile-migration
+             {:migrations []}
+             migrations))
 
 (defn- column-map [columns]
   (reduce (fn [m [col def]] (assoc m col def)) {} columns))
