@@ -44,8 +44,8 @@
   (->> (slurp f)
        (edn/read-string)
        (wrap-single-migration)
-       (map normalize-migration)
        (compiler/compile)
+       (map normalize-migration)
        (guess-id-from-file-extension f)))
 
 (defmulti load-file-seq
