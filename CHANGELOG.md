@@ -1,3 +1,7 @@
+## 0.10.1 (2024-11-08)
+
+* Fixed bug in `load-migrations` when used with vector migrations
+
 ## 0.10.0 (2024-11-07)
 
 * Added syntax for generating common SQL migrations
