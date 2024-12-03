@@ -15,6 +15,12 @@
            {:id "create-index-foo_name"
             :up ["CREATE INDEX foo_name ON TABLE foo (name)"]
             :down ["DROP INDEX foo_name"]}
+           {:id "drop-index-foo_name"
+            :up ["DROP INDEX foo_name"]
+            :down ["CREATE INDEX foo_name ON TABLE foo (name)"]}
+           {:id "create-unique-index-foo_name"
+            :up ["CREATE UNIQUE INDEX foo_name ON TABLE foo (name)"]
+            :down ["DROP INDEX foo_name"]}
            {:id "cleanup"
             :up ["DROP INDEX foo_name"
                  "ALTER TABLE foo DROP COLUMN name"
@@ -28,6 +34,8 @@
              [:add-column foo updated_at "timestamp default now()"]
              [:rename-column foo full_name name]
              [:create-index foo_name foo [name]]
+             [:drop-index foo_name]
+             [:create-unique-index foo_name foo [name]]
              {:id "cleanup"
               :do [[:drop-index foo_name]
                    [:drop-column foo name]

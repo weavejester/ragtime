@@ -5,14 +5,16 @@
 (defmulti gen-id
   (fn [[key & _args]] key))
 
-(defmethod gen-id :create-table  [[_ table]]     (str "create-table-" table))
-(defmethod gen-id :drop-table    [[_ table]]     (str "drop-table-" table))
-(defmethod gen-id :add-column    [[_ table col]] (str "add-column-" table "-" col))
-(defmethod gen-id :drop-column   [[_ table col]] (str "drop-column-" table "-" col))
-(defmethod gen-id :create-index  [[_ index]]     (str "create-index-" index))
-(defmethod gen-id :drop-index    [[_ index]]     (str "drop-index-" index))
+(defmethod gen-id :create-table  [[_ table]] (str "create-table-" table))
+(defmethod gen-id :drop-table    [[_ table]] (str "drop-table-" table))
+(defmethod gen-id :add-column    [[_ t col]] (str "add-column-" t "-" col))
+(defmethod gen-id :drop-column   [[_ t col]] (str "drop-column-" t "-" col))
+(defmethod gen-id :create-index  [[_ index]] (str "create-index-" index))
+(defmethod gen-id :drop-index    [[_ index]] (str "drop-index-" index))
 (defmethod gen-id :rename-column [[_ table old new]]
   (str "rename-column-" table "-" old "-to-" new))
+(defmethod gen-id :create-unique-index [[_ index]]
+  (str "create-unique-index-" index))
 
 (defn- normalize [migration]
   (if (vector? migration)
@@ -108,3 +110,9 @@
    :up    (str "DROP INDEX " name)
    :down  (str "CREATE INDEX " name " ON TABLE " (:table (get indexes name))
                " (" (str/join ", " (:columns (get indexes name))) ")")})
+
+(defmethod compile-expr :create-unique-index [state [_ name table columns]]
+  {:state (assoc-in state [:indexes name] {:table table, :columns columns})
+   :up    (str "CREATE UNIQUE INDEX " name " ON TABLE " table
+               " (" (str/join ", " columns) ")")
+   :down  (str "DROP INDEX " name)})
