@@ -39,6 +39,21 @@
     (is (= (index "assoc-x") assoc-x))
     (is (= ((ragtime/into-index index [assoc-y]) "assoc-y") assoc-y))))
 
+(deftest test-custom-indeex
+  (let [index-db (atom {})
+        index    (reify p/MigrationIndex
+                   (index-migration [index id migration]
+                     (swap! index-db assoc id migration) index)
+                   (deindex-migration [index id]
+                     (swap! index-db dissoc id) index)
+                   (get-indexed-migration [_ id not-found]
+                     (@index-db id not-found)))
+        assoc-x  (assoc-migration "assoc-x" :x 1)
+        assoc-y  (assoc-migration "assoc-y" :y 2)
+        index'   (ragtime/into-index index [assoc-x assoc-y])]
+    (is (= assoc-x (p/get-indexed-migration index' "assoc-x" nil)))
+    (is (= assoc-y (p/get-indexed-migration index' "assoc-y" nil)))))
+
 (deftest test-migrate-and-rollback
   (let [database  (in-memory-db)
         migration (assoc-migration "m" :x 1)

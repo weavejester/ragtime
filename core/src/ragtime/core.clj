@@ -4,19 +4,27 @@
             [ragtime.strategy :as strategy]
             [ragtime.reporter :as reporter]))
 
+(extend-protocol p/MigrationIndex
+  clojure.lang.IPersistentMap
+  (index-migration [index key migration]
+    (assoc index key migration))
+  (deindex-migration [index key]
+    (dissoc index key))
+  (get-indexed-migration [index key not-found]
+    (get index key not-found)))
+
 (defn into-index
-  "Add migrations to a map, using their :id as the key."
+  "Add migrations to a map, using their ID as the key."
   ([migrations]
    (into-index {} migrations))
   ([index migrations]
-   (into index (map (juxt p/id identity) migrations))))
+   (reduce #(p/index-migration %1 (p/id %2) %2) index migrations)))
 
 (defn applied-migrations
   "List all migrations in the index that are applied to the database."
   [store index]
-  (->> (p/applied-migration-ids store)
-       (map index)
-       (remove nil?)))
+  (keep #(p/get-indexed-migration index % nil)
+        (p/applied-migration-ids store)))
 
 (defn migrate
   "Apply a single migration to a data store."
@@ -60,10 +68,17 @@
          (throw (InterruptedException.
                  (str "Stopping running migrations before " migration-id
                       " because the current thread has been interrupted"))))
-       (reporter store ({:migrate :up, :rollback :down} action) migration-id)
-       (case action
-         :migrate  (migrate store (index migration-id))
-         :rollback (rollback store (index migration-id)))))))
+       (if-some [migration (p/get-indexed-migration index migration-id nil)]
+         (case action
+           :migrate  (do (reporter store :up migration-id)
+                         (migrate store migration))
+           :rollback (do (reporter store :down migration-id)
+                         (rollback store migration)))
+         (throw (ex-info (str "Could not find migration '" migration-id
+                              "' in index")
+                         {:reason ::migration-not-indexed
+                          :index index
+                          :migration-id migration-id})))))))
 
 (defn rollback-last
   "Rollback the last n migrations from the database, using the supplied
@@ -93,8 +108,9 @@
          discards   (->> (reverse migrations)
                          (take-while #(not= (p/id %) migration-id)))]
      (if (= (count discards) (count migrations))
-       (throw (ex-info (str "Could not find migration '" migration-id "' in data store")
-                       {:reason       ::migration-not-found
+       (throw (ex-info (str "Could not find migration '" migration-id
+                            "' in data store")
+                       {:reason       ::migration-not-stored
                         :store        store
                         :migration-id migration-id}))
        (doseq [migration discards]

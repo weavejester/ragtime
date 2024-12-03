@@ -17,4 +17,14 @@
   (remove-migration-id [store migration-id]
     "Remove a rolled-back migration ID from the data store.")
   (applied-migration-ids [store]
-    "Return an ordered list of ids of all migrations applied to the data store."))
+    "Return an ordered list of ids of all migrations applied to the data
+    store."))
+
+(defprotocol MigrationIndex
+  "Protocol for keeping an index of migrations."
+  (index-migration [index key migration]
+    "Add a migration to the index with the supplied key.")
+  (deindex-migration [index key]
+    "Remove a migration from the index.")
+  (get-indexed-migration [index key not-found]
+    "Get a migration from the index."))
