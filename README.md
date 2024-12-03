@@ -19,7 +19,7 @@ Or to your Leiningen project file:
 
 ## Overview
 
-Ragtime needs three pieces of data to work:
+Ragtime needs a minimum of three things to work:
 
 1. A migratable **data store**
 2. An ordered sequence of **migrations**
@@ -46,7 +46,18 @@ therefore supporting SQL migrations out of the box.
 
 The migration store for SQL database is a special migrations table,
 and the migrations can be specified as either `.sql` files, or `.edn`
-files. For more information, see the documentation below:
+files. For more information, see the documentation below.
+
+Some Ragtime functions require one more element: a migration index. This
+should satisfy the `MigrationIndex` protocol, which has three methods:
+
+* `index-migration`       - index a migration by key
+* `deindex-migration`     - remove a migration from the index
+* `get-indexed-migration` - get an indexed migration by key
+
+This is used for storing migration information. By default this protocol
+is satisfied by an ordinary Clojure map, but could be attached to a
+persistence layer.
 
 [java.jdbc]: https://github.com/clojure/java.jdbc
 [next.jdbc]: https://github.com/seancorfield/next-jdbc
