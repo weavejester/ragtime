@@ -9,4 +9,4 @@
                  [dev.weavejester/ragtime.core "0.10.1"]
                  [dev.weavejester/ragtime.sql "0.10.1"]]
   :profiles
-  {:dev {:dependencies [[com.h2database/h2 "2.2.224"]]}})
+  {:dev {:dependencies [[com.h2database/h2 "2.3.232"]]}})
