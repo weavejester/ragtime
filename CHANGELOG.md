@@ -1,3 +1,8 @@
+## 0.11.0 (2024-12-03)
+
+* Added `MigrationIndex` protocol
+* Added `:create-unique-index` vector migration
+
 ## 0.10.1 (2024-11-08)
 
 * Fixed bug in `load-migrations` when used with vector migrations
