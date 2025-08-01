@@ -1,0 +1,2 @@
+{:up ["CREATE TABLE clj_mixed2 (id int)"]
+ :down migrations.010-next-jdbc-test/down}

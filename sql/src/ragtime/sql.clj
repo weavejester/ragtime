@@ -11,6 +11,14 @@
 (defn- normalize-migration [migration]
   (update migration :transactions (fnil identity :both)))
 
+(defn- resolve-symbols-to-vars [migration]
+  (cond-> migration
+    (symbol? (:up migration))
+    (update :up requiring-resolve)
+
+    (symbol? (:down migration))
+    (update :down requiring-resolve)))
+
 (defn- file-extension [file]
   (re-find #"\.[^.]*$" (str file)))
 
@@ -46,6 +54,7 @@
        (wrap-single-migration)
        (compiler/compile)
        (map normalize-migration)
+       (map resolve-symbols-to-vars)
        (guess-id-from-file-extension f)))
 
 (defmulti load-file-seq

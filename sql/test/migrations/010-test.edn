@@ -1,0 +1,2 @@
+{:up migrations.010-sql-test/up
+ :down migrations.010-sql-test/down}

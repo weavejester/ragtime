@@ -27,6 +27,9 @@
            :up ["CREATE TABLE aaa (id int)"] :down ["DROP TABLE aaa"]}
           {:id "009-test", :transactions :both
            :up ["CREATE TABLE bbb (id int)"] :down ["DROP TABLE bbb"]}
+          {:id "010-test" :transactions :both
+           :up (requiring-resolve 'migrations.010-sql-test/up)
+           :down (requiring-resolve 'migrations.010-sql-test/down)}
           {:id "create-table-ccc", :transactions :both
            :up ["CREATE TABLE ccc (id int)"] :down ["DROP TABLE ccc"]}]
          (sql/load-directory "test/migrations"))))
@@ -56,6 +59,9 @@
            :up ["CREATE TABLE aaa (id int)"] :down ["DROP TABLE aaa"]}
           {:id "009-test", :transactions :both
            :up ["CREATE TABLE bbb (id int)"] :down ["DROP TABLE bbb"]}
+          {:id "010-test" :transactions :both
+           :up (requiring-resolve 'migrations.010-sql-test/up)
+           :down (requiring-resolve 'migrations.010-sql-test/down)}
           {:id "create-table-ccc", :transactions :both
            :up ["CREATE TABLE ccc (id int)"] :down ["DROP TABLE ccc"]}]
          (sql/load-resources "migrations"))))

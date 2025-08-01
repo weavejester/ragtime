@@ -1,0 +1,2 @@
+{:up migrations.009-jdbc-test/up
+ :down ["DROP TABLE clj_mixed1"]}

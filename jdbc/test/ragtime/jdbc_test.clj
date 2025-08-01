@@ -91,9 +91,11 @@
         ms  (jdbc/load-directory "test/migrations")
         idx (core/into-index ms)]
     (core/migrate-all db idx ms)
-    (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ" "QUZA" "QUZB" "QUXA" "QUXB" "LAST_TABLE" "QUXC" "QUXD"}
+    (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ" "QUZA" "QUZB" "QUXA"
+             "QUXB" "LAST_TABLE" "QUXC" "QUXD" "CLJ" "CLJ_MIXED1" "CLJ_MIXED2"}
            (table-names db)))
-    (is (= ["001-test" "002-bar" "003-test" "004-test" "005-test" "006-test" "007-test"]
+    (is (= ["001-test" "002-bar" "003-test" "004-test" "005-test" "006-test"
+            "007-test" "008-test" "009-test" "010-test"]
            (p/applied-migration-ids db)))
     (core/rollback-last db idx (count ms))
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))
@@ -104,9 +106,11 @@
         ms  (jdbc/load-resources "migrations")
         idx (core/into-index ms)]
     (core/migrate-all db idx ms)
-    (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ" "QUZA" "QUZB" "QUXA" "QUXB" "LAST_TABLE" "QUXC" "QUXD"}
+    (is (= #{"RAGTIME_MIGRATIONS" "FOO" "BAR" "BAZ" "QUZA" "QUZB" "QUXA"
+             "QUXB" "LAST_TABLE" "QUXC" "QUXD" "CLJ" "CLJ_MIXED1" "CLJ_MIXED2"}
            (table-names db)))
-    (is (= ["001-test" "002-bar" "003-test" "004-test" "005-test" "006-test" "007-test"]
+    (is (= ["001-test" "002-bar" "003-test" "004-test" "005-test" "006-test"
+            "007-test" "008-test" "009-test" "010-test"]
            (p/applied-migration-ids db)))
     (core/rollback-last db idx (count ms))
     (is (= #{"RAGTIME_MIGRATIONS"} (table-names db)))

@@ -131,17 +131,20 @@
     (doseq [s statements]
       (jdbc/execute! datasource [s]))))
 
+(defn- execute! [action db transactions]
+  (if (var? action)
+    (action (:datasource db))
+    (execute-sql! (:datasource db)
+                  action
+                  (contains? #{:up :both true} transactions))))
+
 (defrecord SqlMigration [id up down transactions]
   p/Migration
   (id [_] id)
   (run-up! [_ db]
-    (execute-sql! (:datasource db)
-                  up
-                  (contains? #{:up :both true} transactions)))
+    (execute! up db transactions))
   (run-down! [_ db]
-    (execute-sql! (:datasource db)
-                  down
-                  (contains? #{:down :both true} transactions))))
+    (execute! down db transactions)))
 
 (defn sql-migration
   "Create a Ragtime migration from a map with a unique :id, and :up and :down
