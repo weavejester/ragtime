@@ -1,3 +1,7 @@
+## 0.12.0 (2025-09-04)
+
+* Added support for Clojure-based SQL migrations (#166)
+
 ## 0.11.0 (2024-12-03)
 
 * Added `MigrationIndex` protocol
