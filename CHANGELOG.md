@@ -1,3 +1,7 @@
+## 0.12.1 (2025-09-23)
+
+* Added `ragtime.sql/->migrations` function
+
 ## 0.12.0 (2025-09-04)
 
 * Added support for Clojure-based SQL migrations (#166)
