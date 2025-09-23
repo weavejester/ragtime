@@ -74,3 +74,18 @@
           {:id "create-table-ccc", :transactions :both
            :up ["CREATE TABLE ccc (id int)"] :down ["DROP TABLE ccc"]}]
          (sql/load-migrations "test/migrations/008-test.edn"))))
+
+(deftest test->migrations
+  (is (= [{:id "008-test", :transactions :both
+           :up ["CREATE TABLE aaa (id int)"] :down ["DROP TABLE aaa"]}
+          {:id "009-test", :transactions :both
+           :up ["CREATE TABLE bbb (id int)"] :down ["DROP TABLE bbb"]}
+          {:id "create-table-ccc", :transactions :both
+           :up ["CREATE TABLE ccc (id int)"] :down ["DROP TABLE ccc"]}]
+         (sql/->migrations
+          '[{:id "008-test"
+             :up ["CREATE TABLE aaa (id int)"]
+             :down ["DROP TABLE aaa"]}
+            {:id "009-test"
+             :do [[:create-table bbb [id "int"]]]}
+            [:create-table ccc [id "int"]]]))))

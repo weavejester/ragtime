@@ -19,6 +19,16 @@
     (symbol? (:down migration))
     (update :down requiring-resolve)))
 
+(defn ->migrations
+  "Given a data structure describing one or more migrations, return an
+  ordered collection of normalized migration maps."
+  [migrations]
+  (->> migrations
+       (wrap-single-migration)
+       (compiler/compile)
+       (map normalize-migration)
+       (map resolve-symbols-to-vars)))
+
 (defn- file-extension [file]
   (re-find #"\.[^.]*$" (str file)))
 
@@ -51,10 +61,7 @@
   [f]
   (->> (slurp f)
        (edn/read-string)
-       (wrap-single-migration)
-       (compiler/compile)
-       (map normalize-migration)
-       (map resolve-symbols-to-vars)
+       (->migrations)
        (guess-id-from-file-extension f)))
 
 (defmulti load-file-seq
