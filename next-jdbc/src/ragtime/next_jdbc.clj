@@ -54,8 +54,8 @@
   [^String table-name {:keys [table_schem table_name]}]
   (.equalsIgnoreCase table-name
                      (if (.contains table-name ".")
-                       (str table_schem "." table_name)
-                       table_name)))
+                       table_name
+                       (str table_schem "." table_name))))
 
 (defn- table-exists-via-metadata-scan? [datasource ^String table-name]
   (let [{:keys [tables quote]} (get-db-metadata datasource)
